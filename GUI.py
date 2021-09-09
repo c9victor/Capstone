@@ -26,7 +26,16 @@ class Grid:
     start_puzzle = np.reshape(start_puzzle, (9, 9))
     #print("reshape():\n", start_puzzle)
     board = start_puzzle
-    
+
+    ''' 
+    ### For debugging purposes
+    finish_puzzle = list(puzzle[1])
+    finish_puzzle.pop()  # needed because there is a '\n' at the end of the list
+    finish_puzzle = [int(numeric_string) for numeric_string in finish_puzzle]
+    finish_puzzle = np.reshape(finish_puzzle, (9, 9))
+    print("finished:\n", finish_puzzle)
+    '''
+
     def __init__(self, rows, cols, width, height):
         self.rows = rows
         self.cols = cols
@@ -35,6 +44,13 @@ class Grid:
         self.height = height
         self.model = None
         self.selected = None
+
+    '''
+    New method. Used to reset the board when three mistakes are made.
+    '''
+    def reset(self):
+        self.board = self.start_puzzle
+        self.__init__(9, 9, 540, 540)
 
     def update_model(self):
         self.model = [[self.cubes[i][j].value for j in range(self.cols)] for i in range(self.rows)]
@@ -89,8 +105,8 @@ class Grid:
 
     def click(self, pos):
         """
-        :param: pos
-        :return: (row, col)
+        :param: pos - position clicked
+        :return: (row, col) - returns the row and col of the position clicked
         """
         if pos[0] < self.width and pos[1] < self.height:
             gap = self.width / 9
@@ -106,7 +122,7 @@ class Grid:
                 if self.cubes[i][j].value == 0:
                     return False
         return True
-
+### End Of Grid Class
 
 class Cube:
     rows = 9
@@ -143,17 +159,28 @@ class Cube:
 
     def set_temp(self, val):
         self.temp = val
-
+### End Of Cube Class
 
 def redraw_window(win, board, time, strikes):
     win.fill((255,255,255))
     # Draw time
     fnt = pygame.font.SysFont("comicsans", 40)
     text = fnt.render("Time: " + format_time(time), 1, (0,0,0))
-    win.blit(text, (540 - 200, 560))
+    win.blit(text, (540 - 200, 750))
     # Draw Strikes
     text = fnt.render(str(strikes), 1, (255, 0, 0))
-    win.blit(text, (20, 560))
+    win.blit(text, (20, 750))
+
+    #experimental code
+    top_height = 600
+    button_height = 30
+    pygame.draw.rect(win, (216, 191, 216), [255, top_height, 170, button_height])  # (surface, (r, g, b), [left, top, width, height]) 
+    text = fnt.render('New Puzzle' , True , (0, 0, 0))
+    win.blit(text, (260, top_height))
+    pygame.draw.rect(win, (216, 191, 216), [255, top_height + 50, 300, button_height])  # (surface, (r, g, b), [left, top, width, height]) 
+    text = fnt.render('Watch Dancing Links Do It!' , True , (0, 0, 0))
+    win.blit(text, (260, top_height + 50))
+
     # Draw grid and board
     board.draw(win)
 
@@ -168,16 +195,24 @@ def format_time(secs):
 
 
 def main():
-    win = pygame.display.set_mode((540,600))
+    #win = pygame.display.set_mode((540,600))  # (x,y)
+    win = pygame.display.set_mode((540,800))
     pygame.display.set_caption("Sudoku")
     board = Grid(9, 9, 540, 540)
     key = None
     run = True
     start = time.time()
     strikes = 0
-    while run:
 
-        play_time = round(time.time() - start, 1)
+    while run:
+        if strikes == 3:
+            print("3 Mistakes! Board Resetting...")
+            board.reset()
+            strikes = 0
+
+        # play_time was encapsulated into this if statement so that when the puzzle is solved the time stops
+        if not board.is_finished():
+            play_time = round(time.time() - start) 
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -216,7 +251,7 @@ def main():
 
                         if board.is_finished():
                             print("Game over")
-                            run = False
+                            #run = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
