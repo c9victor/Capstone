@@ -13,16 +13,16 @@ class Grid:
     # Note that the first line of the file contains headers, do not attempt to parse it as a puzzle
     with open('.\Puzzles\sudoku.csv', mode='r') as file:
         csvFile = csv.reader(file)
-        puzzleNum = 2
+        puzzleNum = 1
         #puzzleNum = random.randint(1, 10)
         puzzle = file.readlines()[puzzleNum]  
         file.close()  
     puzzle = puzzle.split(',')
-    print(puzzle[0])  # start board
-    print(puzzle[1])  # finished solution
+    print("Puzzle at start: ", puzzle[0])  # start board
+    print("Finished puzzle: ", puzzle[1])  # finished solution
     start_puzzle = list(puzzle[0])
     print("list(): ", start_puzzle)
-    start_puzzle = [int(numeric_string) for numeric_string in start_puzzle]
+    start_puzzle = [int(numeric_string) for numeric_string in start_puzzle]  # https://www.codegrepper.com/code-examples/python/convert+string+array+to+int+array+python
     start_puzzle = np.reshape(start_puzzle, (9, 9))
     print("reshape(): \n", start_puzzle)
     board = start_puzzle
