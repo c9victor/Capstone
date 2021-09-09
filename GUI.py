@@ -13,33 +13,20 @@ class Grid:
     # Note that the first line of the file contains headers, do not attempt to parse it as a puzzle
     with open('.\Puzzles\sudoku.csv', mode='r') as file:
         csvFile = csv.reader(file)
-        puzzleNum = 1
-        #puzzleNum = random.randint(1, 10)
+        puzzleNum = random.randint(1, 1000001)
+        #print("Puzzle Number:", puzzleNum)
         puzzle = file.readlines()[puzzleNum]  
         file.close()  
     puzzle = puzzle.split(',')
-    print("Puzzle at start: ", puzzle[0])  # start board
-    print("Finished puzzle: ", puzzle[1])  # finished solution
+    #print("Puzzle at start:", puzzle[0])  # start board
+    #print("Finished puzzle:", puzzle[1])  # finished solution
     start_puzzle = list(puzzle[0])
-    print("list(): ", start_puzzle)
+    #print("list():", start_puzzle)
     start_puzzle = [int(numeric_string) for numeric_string in start_puzzle]  # https://www.codegrepper.com/code-examples/python/convert+string+array+to+int+array+python
     start_puzzle = np.reshape(start_puzzle, (9, 9))
-    print("reshape(): \n", start_puzzle)
+    #print("reshape():\n", start_puzzle)
     board = start_puzzle
     
-    '''
-    board = [
-        [7, 8, 0, 4, 0, 0, 1, 2, 0],
-        [6, 0, 0, 0, 7, 5, 0, 0, 9],
-        [0, 0, 0, 6, 0, 1, 0, 7, 8],
-        [0, 0, 7, 0, 4, 0, 2, 6, 0],
-        [0, 0, 1, 0, 5, 0, 9, 3, 0],
-        [9, 0, 4, 0, 6, 0, 0, 0, 5],
-        [0, 7, 0, 3, 0, 0, 0, 1, 2],
-        [1, 2, 0, 0, 0, 7, 4, 0, 0],
-        [0, 4, 9, 2, 0, 6, 0, 0, 7]
-    ]
-    '''
     def __init__(self, rows, cols, width, height):
         self.rows = rows
         self.cols = cols
@@ -163,7 +150,7 @@ def redraw_window(win, board, time, strikes):
     # Draw time
     fnt = pygame.font.SysFont("comicsans", 40)
     text = fnt.render("Time: " + format_time(time), 1, (0,0,0))
-    win.blit(text, (540 - 160, 560))
+    win.blit(text, (540 - 200, 560))
     # Draw Strikes
     text = fnt.render(str(strikes), 1, (255, 0, 0))
     win.blit(text, (20, 560))
@@ -190,7 +177,7 @@ def main():
     strikes = 0
     while run:
 
-        play_time = round(time.time() - start)
+        play_time = round(time.time() - start, 1)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
