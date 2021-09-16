@@ -160,11 +160,9 @@ class Grid:
                 if n:                                   # note that 1 == True in python
                     self.dlx_select(X, Y, (i, j, n))    # X, Y
         for solution in self.dlx_solve(X, Y, []): 
-            print("solution type: ", type(solution))
             for (r, c, n) in solution:
                 #self.cubes[r][c].temp = n  # test 
                 #self.place(self.cubes[r][c].temp)  # test
-                #self.sketch((int) (n))
                 grid[r][c] = n
             yield grid
 
@@ -343,14 +341,11 @@ def main():
                 if clicked:
                     board.select(clicked[0], clicked[1])
                     key = None
-                elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:
-                    board.reset()
-                    #yielded = [board.dlx_solve_sudoku((3, 3), board.board)]
+                elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:  # if clicked the dlx button
                     print("DLX Button Clicked!!!") 
+                    board.reset() 
                     generator_list = list(board.dlx_solve_sudoku((3, 3), board.board))
-                    print("Generator list: \n", generator_list)
-                    #for solution in board.dlx_solve_sudoku((3, 3), board.board):
-                    #    print(solution)
+                    #print("Generator list: \n", generator_list) 
 
 
         if board.selected and key != None:
