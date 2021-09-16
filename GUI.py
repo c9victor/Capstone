@@ -1,4 +1,12 @@
+"""
 # GUI.py - RUN THIS FILE
+#!/usr/bin/env python3
+
+# Author: Ali Assaf <ali.assaf.mail@gmail.com>
+# Copyright: (C) 2010 Ali Assaf
+# License: GNU General Public License <http://www.gnu.org/licenses/>
+"""
+
 import pygame
 import random  # added by me
 import csv  # added by me
