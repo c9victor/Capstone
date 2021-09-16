@@ -4,7 +4,7 @@
 *-------------------------------------------------------------------------*
 * SOURCE 1                                                                *
 *                                                                         *
-*techwithtim.net/tutorials/python-programming/sudoku-solver-backtracking/ *
+* techwithtim.net/tutorials/python-programming/sudoku-solver-backtracking/*
 *-------------------------------------------------------------------------*
 
 
