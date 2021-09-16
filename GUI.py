@@ -18,7 +18,7 @@ class Grid:
     with open('sudoku.csv', mode='r') as file:
         csvFile = csv.reader(file)
         puzzleNum = random.randint(1, 1000001)
-        #print("Puzzle Number:", puzzleNum)
+        print("Puzzle Number:", puzzleNum)
         puzzle = file.readlines()[puzzleNum]  
         file.close()  
     puzzle = puzzle.split(',')
@@ -132,43 +132,43 @@ class Grid:
                     return False
         return True
 
-    def dlx_solve_sudoku(self, size, grid):
+    def dlx_solve_sudoku(self, size, grid): 
         """ An efficient Sudoku solver using Algorithm X.
         
         >>> for solution in dlxSolve((3, 3), grid):
                 print(*solution, sep='\\n')
         """
+
         R, C = size
         N = R * C
-        X = ([("rc", rc) for rc in product(range(N), range(N))] +
-            [("rn", rn) for rn in product(range(N), range(1, N + 1))] +
-            [("cn", cn) for cn in product(range(N), range(1, N + 1))] +
-            [("bn", bn) for bn in product(range(N), range(1, N + 1))])
+        X = ([("rc", rc) for rc in product(range(N), range(N))] +           # row col
+            [("rn", rn) for rn in product(range(N), range(1, N + 1))] +     # row number
+            [("cn", cn) for cn in product(range(N), range(1, N + 1))] +     # col number
+            [("bn", bn) for bn in product(range(N), range(1, N + 1))])      # box number
         Y = dict()
         for r, c, n in product(range(N), range(N), range(1, N + 1)):
-            b = (r // R) * R + (c // C) # Box number
+            b = (r // R) * R + (c // C)  # box number. // represents floor division
             Y[(r, c, n)] = [
                 ("rc", (r, c)),
                 ("rn", (r, n)),
                 ("cn", (c, n)),
                 ("bn", (b, n))]
-        
-        ### test code
-        #print("X ", X[0])
-        #res = next(iter(Y))
-        #print("The first key of dictionary is : " + str(res))
 
         X, Y = self.dlx_exact_cover(X, Y)
-        for i, row in enumerate(grid):
-            for j, n in enumerate(row):
-                if n:
-                    self.dlx_select(X, Y, (i, j, n))
-        for solution in self.dlx_solve(X, Y, []):
+        for i, row in enumerate(grid):                  # count of curr iteration (i) and the value at i (row)
+            for j, n in enumerate(row):                 # curr iteration (j) and value at j (n)
+                if n:                                   # note that 1 == True in python
+                    self.dlx_select(X, Y, (i, j, n))    # X, Y
+        for solution in self.dlx_solve(X, Y, []): 
+            print("solution type: ", type(solution))
             for (r, c, n) in solution:
+                #self.cubes[r][c].temp = n  # test 
+                #self.place(self.cubes[r][c].temp)  # test
+                #self.sketch((int) (n))
                 grid[r][c] = n
             yield grid
 
-    def dlx_exact_cover(X, Y): #board.place(board.cubes[i][j].temp)
+    def dlx_exact_cover(self, X, Y):  
         X = {j: set() for j in X}
         for i, row in Y.items():
             for j in row:
@@ -180,17 +180,16 @@ class Grid:
             yield list(solution)
         else:
             c = min(X, key=lambda c: len(X[c]))
-            for r in list(X[c]):
+            for r in list(X[c]):                            # note that r and c are both tuples
                 solution.append(r)
-                cols = self.dlx_select(X, Y, r)
-                self.board.place(self.board.cubes[r][c].temp)  # test
+                cols = self.dlx_select(X, Y, r) 
                 for s in self.dlx_solve(X, Y, solution):
                     yield s
                 self.dlx_deselect(X, Y, r, cols)
-                self.clear(r, cols)  # test
+                #self.clear(r, cols)  # test
                 solution.pop()
 
-    def dlx_select(X, Y, r):
+    def dlx_select(self, X, Y, r):
         cols = []
         for j in Y[r]:
             for i in X[j]:
@@ -200,7 +199,7 @@ class Grid:
             cols.append(X.pop(j))
         return cols
 
-    def dlx_deselect(X, Y, r, cols):
+    def dlx_deselect(self, X, Y, r, cols):
         for j in reversed(Y[r]):
             X[j] = cols.pop()
             for i in X[j]:
@@ -256,7 +255,7 @@ def redraw_window(win, board, time, strikes):
     text = fnt.render(str(strikes), 1, (255, 0, 0))
     win.blit(text, (20, 750))
 
-    #experimental code
+    #code for buttons
     button_top = 600
     button_height = 30
     pygame.draw.rect(win, (216, 191, 216), [120, button_top, 170, button_height])  # (surface, (r, g, b), [left, top, width, height]) 
@@ -280,8 +279,7 @@ def format_time(secs):
 
 
 def main():
-    #win = pygame.display.set_mode((540,600))  # (x,y)
-    win = pygame.display.set_mode((540,800))
+    win = pygame.display.set_mode((540,800))  # (x, y)
     pygame.display.set_caption("Sudoku")
     board = Grid(9, 9, 540, 540)
     key = None
@@ -295,7 +293,8 @@ def main():
             board.reset()
             strikes = 0
 
-        # play_time was encapsulated into this if statement so that when the puzzle is solved the time stops
+        # play_time was encapsulated into this if statement 
+        # so that when the puzzle is solved the time stops.
         if not board.is_finished():
             play_time = round(time.time() - start) 
 
@@ -347,12 +346,11 @@ def main():
                 elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:
                     board.reset()
                     #yielded = [board.dlx_solve_sudoku((3, 3), board.board)]
-                    print("DLX Button Clicked!!!")
-                    board.dlx_solve_sudoku((3, 3), board.board)
+                    print("DLX Button Clicked!!!") 
+                    generator_list = list(board.dlx_solve_sudoku((3, 3), board.board))
+                    print("Generator list: \n", generator_list)
                     #for solution in board.dlx_solve_sudoku((3, 3), board.board):
-                    #    print("solved")
                     #    print(solution)
-                    #print(yielded)
 
 
         if board.selected and key != None:
