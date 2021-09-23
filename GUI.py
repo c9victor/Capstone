@@ -126,7 +126,7 @@ class Grid:
             self.cubes[row][col].set_temp(0)
 
     # new overloaded method for DLX deselect
-    def clear(self, row, col):
+    def dlx_clear(self, row, col):
         #if self.cubes[row][col].value == 0:
         self.cubes[row][col].set_temp(0)
 
@@ -150,7 +150,7 @@ class Grid:
                     return False
         return True
 
-    def dlx_solve_sudoku(self, size, grid): 
+    def dlx_solve_sudoku(self, size, grid, win): 
         """ An efficient Sudoku solver using Algorithm X.
         
         >>> for solution in dlxSolve((3, 3), grid):
@@ -179,9 +179,15 @@ class Grid:
                     self.dlx_select(X, Y, (i, j, n))    # X, Y
         for solution in self.dlx_solve(X, Y, []): 
             for (r, c, n) in solution:
-                #self.cubes[r][c].temp = n  # test 
-                #self.place(self.cubes[r][c].temp)  # test
-                grid[r][c] = n
+                self.select(r, c)
+                self.cubes[r][c].temp = n   
+                if (self.cubes[r][c].temp != 0):
+                    self.place(self.cubes[r][c].temp)
+                self.sketch(n)
+                redraw_window(win, self, 0, 0) 
+                pygame.display.update()
+                grid[r][c] = n      # original code
+                time.sleep(0.01)    # still places all values at once
             yield grid
 
     def dlx_exact_cover(self, X, Y):  
@@ -202,7 +208,7 @@ class Grid:
                 for s in self.dlx_solve(X, Y, solution):
                     yield s
                 self.dlx_deselect(X, Y, r, cols)
-                #self.clear(r, cols)  # test
+                #self.dlx_clear(r, cols)  # test
                 solution.pop()
 
     def dlx_select(self, X, Y, r):
@@ -302,6 +308,7 @@ def main():
     run = True
     start = time.time()
     strikes = 0
+    wait = False
 
     while run:
         if strikes == 3:
@@ -336,10 +343,10 @@ def main():
                     key = 8
                 if event.key == pygame.K_9:
                     key = 9
-                if event.key == pygame.K_DELETE:
+                if event.key == pygame.K_DELETE:  # delete key
                     board.clear()
                     key = None
-                if event.key == pygame.K_RETURN:
+                if event.key == pygame.K_RETURN:  # enter key
                     i, j = board.selected
                     if board.cubes[i][j].temp != 0:
                         if board.place(board.cubes[i][j].temp):
@@ -359,11 +366,11 @@ def main():
                 if clicked:
                     board.select(clicked[0], clicked[1])
                     key = None
-                elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:  # if clicked the dlx button
+                elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:  # if dlx button clicked
                     print("DLX Button Clicked!!!") 
                     board.reset() 
-                    generator_list = list(board.dlx_solve_sudoku((3, 3), board.board))
-                    #print("Generator list: \n", generator_list) 
+                    #board.dlx_solve_sudoku((3, 3), board.board)
+                    list(board.dlx_solve_sudoku((3, 3), board.board, win))
 
 
         if board.selected and key != None:
