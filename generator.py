@@ -34,7 +34,7 @@ class SudokuGenerator:
         """
 
     def generate_five (self):
-        self.generate_puzzle()
+        self.generate_puzzle() 
         grid0 = self.full_grid
         grid1 = [[0 for i in range(9)] for j in range(9)]
         grid2 = [[0 for i in range(9)] for j in range(9)]
@@ -43,29 +43,49 @@ class SudokuGenerator:
         for i in range(6, 9):
             for j in range(6, 9):
                 grid1[i][j] = grid0[i-6][j-6] 
-        self.print_grid('grid0', grid=grid0)
-        self.print_grid('grid1', grid=grid1)
+        #self.print_grid('grid0', grid=grid0)
+        #self.print_grid('grid1', grid=grid1)
         for i in range(6, 9): 
             for j in range(0, 3): 
                 grid2[i][j] = grid0[i-6][j+6] 
-        self.print_grid('grid2', grid=grid2)
+        #self.print_grid('grid2', grid=grid2)
         ### TO DO ###
         for i in range(0, 3): 
             for j in range(0, 3): 
                 grid3[i][j] = grid0[i+6][j+6] 
-        self.print_grid('grid3', grid=grid3)
+        #self.print_grid('grid3', grid=grid3)
         for i in range(0, 3): 
             for j in range(6, 9): 
                 grid4[i][j] = grid0[i+6][j-6] 
+        #self.print_grid('grid4', grid=grid4)
+        print('grid1')
+        self.generate_puzzle(grid1)
+        print('grid2')
+        self.generate_puzzle(grid2)
+        print('grid3')
+        self.generate_puzzle(grid3)
+        print('grid4')
+        self.generate_puzzle(grid4)
+        '''
+        self.print_grid('grid0', grid=self.grid)
+        self.print_grid('grid1', grid=grid1)
+        self.print_grid('grid2', grid=grid2)
+        self.print_grid('grid3', grid=grid3)
         self.print_grid('grid4', grid=grid4)
-
+        '''
 
     # generates a new puzzle and solves it
     def generate_puzzle(self, grid=None):
-        self.generate_solution(self.grid)
-        self.full_grid = copy.deepcopy(self.grid)  #new code
+        if grid:
+            self.generate_solution(grid)   
+            self.print_grid(grid=grid)
+            self.remove_numbers_from_grid(grid)
+        else:
+            self.generate_solution(self.grid) 
+            self.print_grid('middle grid')
+            self.full_grid = copy.deepcopy(self.grid)  #new code
+            self.remove_numbers_from_grid(self.grid)
         #self.print_grid('full solution')
-        self.remove_numbers_from_grid()
         #self.print_grid('with removed numbers') 
         return
 
@@ -188,10 +208,10 @@ class SudokuGenerator:
         shuffle(non_empty_squares)
         return non_empty_squares
 
-    def remove_numbers_from_grid(self):
+    def remove_numbers_from_grid(self, grid=None):
         """remove numbers from the grid to create the puzzle"""
         # get all non-empty squares from the grid
-        non_empty_squares = self.get_non_empty_squares(self.grid)
+        non_empty_squares = self.get_non_empty_squares(grid)
         non_empty_squares_count = len(non_empty_squares)
         rounds = 3
         while rounds > 0 and non_empty_squares_count >= 17:
@@ -199,16 +219,16 @@ class SudokuGenerator:
             row, col = non_empty_squares.pop()
             non_empty_squares_count -= 1
             # might need to put the square value back if there is more than one solution
-            removed_square = self.grid[row][col]
-            self.grid[row][col] = 0
+            removed_square = grid[row][col]
+            grid[row][col] = 0
             # make a copy of the grid to solve
-            grid_copy = copy.deepcopy(self.grid)
+            grid_copy = copy.deepcopy(grid)
             # initialize solutions counter to zero
             self.counter = 0
             self.solve_puzzle(grid_copy)
             # if there is more than one solution, put the last removed cell back into the grid
             if self.counter != 1:
-                self.grid[row][col] = removed_square
+                grid[row][col] = removed_square
                 non_empty_squares_count += 1
                 rounds -= 1
         return
