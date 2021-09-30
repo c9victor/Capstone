@@ -37,22 +37,36 @@ class SudokuGenerator:
         self.generate_puzzle()
         grid0 = self.full_grid
         grid1 = [[0 for i in range(9)] for j in range(9)]
+        grid2 = [[0 for i in range(9)] for j in range(9)]
+        grid3 = [[0 for i in range(9)] for j in range(9)]
+        grid4 = [[0 for i in range(9)] for j in range(9)]
         for i in range(6, 9):
             for j in range(6, 9):
-                grid1[i][j] = grid0[i-6][j-6]
-        print('grid1')
-        self.print_grid(grid=grid1)
-        #for i in grid0:
-        #    for j in grid0[i]: 
+                grid1[i][j] = grid0[i-6][j-6] 
+        self.print_grid('grid0', grid=grid0)
+        self.print_grid('grid1', grid=grid1)
+        for i in range(6, 9): 
+            for j in range(0, 3): 
+                grid2[i][j] = grid0[i-6][j+6] 
+        self.print_grid('grid2', grid=grid2)
+        ### TO DO ###
+        for i in range(0, 3): 
+            for j in range(0, 3): 
+                grid3[i][j] = grid0[i+6][j+6] 
+        self.print_grid('grid3', grid=grid3)
+        for i in range(0, 3): 
+            for j in range(6, 9): 
+                grid4[i][j] = grid0[i+6][j-6] 
+        self.print_grid('grid4', grid=grid4)
 
 
     # generates a new puzzle and solves it
     def generate_puzzle(self, grid=None):
         self.generate_solution(self.grid)
         self.full_grid = copy.deepcopy(self.grid)  #new code
-        self.print_grid('full solution')
+        #self.print_grid('full solution')
         self.remove_numbers_from_grid()
-        self.print_grid('with removed numbers') 
+        #self.print_grid('with removed numbers') 
         return
 
     def print_grid(self, grid_name=None, grid=None):
@@ -204,4 +218,4 @@ def main():
     solved = SudokuGenerator()
 
 
-main()
+main()  
