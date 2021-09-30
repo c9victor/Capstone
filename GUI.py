@@ -47,7 +47,16 @@ class Grid:
     start_puzzle = [int(numeric_string) for numeric_string in start_puzzle]  # https://www.codegrepper.com/code-examples/python/convert+string+array+to+int+array+python
     start_puzzle = np.reshape(start_puzzle, (9, 9))
     #print("reshape():\n", start_puzzle)
-    board = start_puzzle
+    hardest_puzzle = [[0, 0, 5, 3, 0, 0, 0, 0, 0],
+                      [8, 0, 0, 0, 0, 0, 0, 2, 0],
+                      [0, 7, 0, 0, 1, 0, 5, 0, 0],
+                      [4, 0, 0, 0, 0, 5, 3, 0, 0],
+                      [0, 1, 0, 0, 7, 0, 0, 0, 6],
+                      [0, 0, 3, 2, 0, 0, 0, 8, 0],
+                      [0, 6, 0, 5, 0, 0, 0, 0, 9],
+                      [0, 0, 4, 0, 0, 0, 0, 3, 0],
+                      [0, 0, 0, 0, 0, 9, 7, 0, 0]]
+    board = hardest_puzzle
 
     
     ### For debugging purposes
@@ -71,7 +80,8 @@ class Grid:
     New method. Used to reset the board when three mistakes are made or when dlx button is clicked.
     '''
     def reset(self):
-        self.board = self.start_puzzle
+        #self.board = self.start_puzzle
+        self.board = self.hardest_puzzle
         self.__init__(9, 9, 540, 540)
 
     def update_model(self):
@@ -90,6 +100,11 @@ class Grid:
                 self.cubes[row][col].set_temp(0)
                 self.update_model()
                 return False
+    
+    def dlx_place(self, val):
+        row, col = self.selected
+        self.cubes[row][col].set(val)
+        self.update_model()
 
     def sketch(self, val):
         row, col = self.selected
@@ -175,19 +190,21 @@ class Grid:
         X, Y = self.dlx_exact_cover(X, Y)
         for i, row in enumerate(grid):                  # count of curr iteration (i) and the value at i (row)
             for j, n in enumerate(row):                 # curr iteration (j) and value at j (n)
-                if n:                                   # note that 1 == True in python
-                    self.dlx_select(X, Y, (i, j, n))    # X, Y
-        for solution in self.dlx_solve(X, Y, []): 
-            for (r, c, n) in solution:
+                if n:                                   # any non-zero # == True
+                    self.dlx_select(X, Y, (i, j, n))    # X, Y, (row, col, non-zero #)
+        for solution in self.dlx_solve(X, Y, [], win): 
+            for (r, c, n) in solution: 
+                '''
                 self.select(r, c)
                 self.cubes[r][c].temp = n   
                 if (self.cubes[r][c].temp != 0):
                     self.place(self.cubes[r][c].temp)
                 self.sketch(n)
                 redraw_window(win, self, 0, 0) 
-                pygame.display.update()
+                pygame.display.update() 
+                '''
                 grid[r][c] = n      # original code
-                time.sleep(0.01)    # still places all values at once
+                #time.sleep(0.1)   # this allows us to see the invidividual changes being made
             yield grid
 
     def dlx_exact_cover(self, X, Y):  
@@ -197,21 +214,40 @@ class Grid:
                 X[j].add(i)
         return X, Y
 
-    def dlx_solve(self, X, Y, solution):
+    def dlx_solve(self, X, Y, solution, win):
         if not X:
             yield list(solution)
         else:
+            '''
+            Examples of r/c tuples:
+            r: (1, 1, 4)
+            c: ('rc', (1, 1))
+            '''
             c = min(X, key=lambda c: len(X[c]))
-            for r in list(X[c]):                            # note that r and c are both tuples
+            for r in list(X[c]):  # note that r and c are both tuples
                 solution.append(r)
-                cols = self.dlx_select(X, Y, r) 
-                for s in self.dlx_solve(X, Y, solution):
+                cols = self.dlx_select(X, Y, r)  
+                # EXPERIMENTAL STUFF
+                
+                row = r[0]
+                col = r[1]
+                self.select(row, col)
+                self.cubes[row][col].temp = r[2]   
+                if (self.cubes[row][col].temp != 0):
+                    self.dlx_place(self.cubes[row][col].temp)
+                self.sketch(r[2])
+                redraw_window(win, self, 0, 0) 
+                pygame.display.update() 
+                time.sleep(0.1)
+                
+                # /EXPERIMENTAL STUFF
+                for s in self.dlx_solve(X, Y, solution, win):
                     yield s
                 self.dlx_deselect(X, Y, r, cols)
-                #self.dlx_clear(r, cols)  # test
+                #self.dlx_clear(row, col)  # test
                 solution.pop()
 
-    def dlx_select(self, X, Y, r):
+    def dlx_select(self, X, Y, r):  # X = dict, Y = dict, r = tuple 
         cols = []
         for j in Y[r]:
             for i in X[j]:
@@ -368,8 +404,7 @@ def main():
                     key = None
                 elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:  # if dlx button clicked
                     print("DLX Button Clicked!!!") 
-                    board.reset() 
-                    #board.dlx_solve_sudoku((3, 3), board.board)
+                    board.reset()  
                     list(board.dlx_solve_sudoku((3, 3), board.board, win))
 
 
