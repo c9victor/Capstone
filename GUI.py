@@ -225,10 +225,9 @@ class Grid:
                 for s in self.dlx_solve(X, Y, solution, win):
                     yield s
                 
-                self.dlx_deselect(X, Y, r, cols)
-                #self.dlx_clear(row, col)  # test
+                self.dlx_deselect(X, Y, r, cols) 
                 #solution.pop()
-                remove = solution.pop()  
+                remove = solution.pop()  # seems nice but it also removes the correct answers which is not great
                 row = remove[0]
                 col = remove[1]
                 self.select(row, col)
