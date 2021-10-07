@@ -45,6 +45,7 @@ class Grid:
     start_puzzle = list(puzzle[0])
     #print("list():", start_puzzle)
     start_puzzle = [int(numeric_string) for numeric_string in start_puzzle]  # https://www.codegrepper.com/code-examples/python/convert+string+array+to+int+array+python
+    #print("string->numeric:", start_puzzle)
     start_puzzle = np.reshape(start_puzzle, (9, 9))
     #print("reshape():\n", start_puzzle)
     hardest_puzzle = [[0, 0, 5, 3, 0, 0, 0, 0, 0],
@@ -64,7 +65,7 @@ class Grid:
     finish_puzzle.pop()  # needed because there is a '\n' at the end of the list
     finish_puzzle = [int(numeric_string) for numeric_string in finish_puzzle]
     finish_puzzle = np.reshape(finish_puzzle, (9, 9))
-    print("finished:\n", finish_puzzle)
+    #print("finished:\n", finish_puzzle)
     
 
     def __init__(self, rows, cols, width, height):
@@ -193,19 +194,10 @@ class Grid:
                 if n:                                   # any non-zero # == True
                     self.dlx_select(X, Y, (i, j, n))    # X, Y, (row, col, non-zero #)
         for solution in self.dlx_solve(X, Y, [], win): 
-            for (r, c, n) in solution: 
-                '''
-                self.select(r, c)
-                self.cubes[r][c].temp = n   
-                if (self.cubes[r][c].temp != 0):
-                    self.place(self.cubes[r][c].temp)
-                self.sketch(n)
-                redraw_window(win, self, 0, 0) 
-                pygame.display.update() 
-                '''
-                grid[r][c] = n      # original code
-                #time.sleep(0.1)   # this allows us to see the invidividual changes being made
-            yield grid
+            for (r, c, n) in solution:  
+                # originally did sketching here
+                grid[r][c] = n      # original code 
+            yield grid 
 
     def dlx_exact_cover(self, X, Y):  
         X = {j: set() for j in X}
@@ -224,28 +216,41 @@ class Grid:
             c: ('rc', (1, 1))
             '''
             c = min(X, key=lambda c: len(X[c]))
+            length = len(X[c])  # test
             for r in list(X[c]):  # note that r and c are both tuples
                 solution.append(r)
-                cols = self.dlx_select(X, Y, r)  
-                # EXPERIMENTAL STUFF
-                
-                row = r[0]
-                col = r[1]
-                self.select(row, col)
-                self.cubes[row][col].temp = r[2]   
-                if (self.cubes[row][col].temp != 0):
-                    self.dlx_place(self.cubes[row][col].temp)
-                self.sketch(r[2])
-                redraw_window(win, self, 0, 0) 
-                pygame.display.update() 
-                time.sleep(0.1)
-                
-                # /EXPERIMENTAL STUFF
+                cols = self.dlx_select(X, Y, r)   
+                self.dlx_sketch(r, win)
+
                 for s in self.dlx_solve(X, Y, solution, win):
                     yield s
+                
                 self.dlx_deselect(X, Y, r, cols)
                 #self.dlx_clear(row, col)  # test
-                solution.pop()
+                #solution.pop()
+                remove = solution.pop()  
+                row = remove[0]
+                col = remove[1]
+                self.select(row, col)
+                self.cubes[row][col].temp = 0   
+                self.dlx_place(self.cubes[row][col].temp)
+                self.sketch(0)
+                redraw_window(win, self, 0, 0) 
+                pygame.display.update() 
+                #time.sleep(0.05) 
+
+    
+    def dlx_sketch(self, r, win):
+        row = r[0]
+        col = r[1]
+        self.select(row, col)
+        self.cubes[row][col].temp = r[2]   
+        if (self.cubes[row][col].temp != 0):
+            self.dlx_place(self.cubes[row][col].temp)
+        self.sketch(r[2])
+        redraw_window(win, self, 0, 0) 
+        pygame.display.update() 
+        time.sleep(0.05) 
 
     def dlx_select(self, X, Y, r):  # X = dict, Y = dict, r = tuple 
         cols = []
