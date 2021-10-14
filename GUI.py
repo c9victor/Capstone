@@ -57,7 +57,7 @@ class Grid:
                       [0, 6, 0, 5, 0, 0, 0, 0, 9],
                       [0, 0, 4, 0, 0, 0, 0, 3, 0],
                       [0, 0, 0, 0, 0, 9, 7, 0, 0]]
-    board = hardest_puzzle
+    board = start_puzzle
 
     
     ### For debugging purposes
@@ -65,7 +65,7 @@ class Grid:
     finish_puzzle.pop()  # needed because there is a '\n' at the end of the list
     finish_puzzle = [int(numeric_string) for numeric_string in finish_puzzle]
     finish_puzzle = np.reshape(finish_puzzle, (9, 9))
-    #print("finished:\n", finish_puzzle)
+    print("finished:\n", finish_puzzle)
     
 
     def __init__(self, rows, cols, width, height):
@@ -81,8 +81,8 @@ class Grid:
     New method. Used to reset the board when three mistakes are made or when dlx button is clicked.
     '''
     def reset(self):
-        #self.board = self.start_puzzle
-        self.board = self.hardest_puzzle
+        self.board = self.start_puzzle
+        #self.board = self.hardest_puzzle
         self.__init__(9, 9, 540, 540)
 
     def update_model(self):
@@ -225,7 +225,7 @@ class Grid:
                 for s in self.dlx_solve(X, Y, solution, win):
                     yield s
                 
-                self.dlx_deselect(X, Y, r, cols) 
+                self.dlx_deselect(X, Y, r, cols, win) 
                 #try storing deselect values in list the looping thru list???
                 solution.pop()
                 #don't remove here
@@ -267,7 +267,7 @@ class Grid:
             #don't remove here
         return cols
 
-    def dlx_deselect(self, X, Y, r, cols):
+    def dlx_deselect(self, X, Y, r, cols, win):
         for j in reversed(Y[r]):
             X[j] = cols.pop()  # X[j] (e.g): {(8, 3, 8), (8, 3, 1), (8, 3, 4), (8, 3, 6)}
             for i in X[j]:
@@ -275,6 +275,7 @@ class Grid:
                     if k != j:
                         X[k].add(i)
                         #don't remove here
+                    #adding else here to remove doesn't work either
 ### End Of Grid Class
 
 class Cube:
