@@ -192,7 +192,7 @@ class Grid:
         for i, row in enumerate(grid):                  # count of curr iteration (i) and the value at i (row)
             for j, n in enumerate(row):                 # curr iteration (j) and value at j (n)
                 if n:                                   # any non-zero # == True
-                    self.dlx_select(X, Y, (i, j, n))    # X, Y, (row, col, non-zero #)
+                    self.dlx_select(X, Y, (i, j, n), win)    # X, Y, (row, col, non-zero #)
         for solution in self.dlx_solve(X, Y, [], win): 
             for (r, c, n) in solution:  
                 # originally did sketching here
@@ -219,14 +219,17 @@ class Grid:
             length = len(X[c])  # test
             for r in list(X[c]):  # note that r and c are both tuples
                 solution.append(r)
-                cols = self.dlx_select(X, Y, r)   
+                cols = self.dlx_select(X, Y, r, win)   
                 self.dlx_sketch(r, win)
 
                 for s in self.dlx_solve(X, Y, solution, win):
                     yield s
                 
                 self.dlx_deselect(X, Y, r, cols) 
-                #solution.pop()
+                #try storing deselect values in list the looping thru list???
+                solution.pop()
+                #don't remove here
+                '''
                 remove = solution.pop()  # seems nice but it also removes the correct answers which is not great
                 row = remove[0]
                 col = remove[1]
@@ -237,6 +240,7 @@ class Grid:
                 redraw_window(win, self, 0, 0) 
                 pygame.display.update() 
                 #time.sleep(0.05) 
+                '''
 
     
     def dlx_sketch(self, r, win):
@@ -251,23 +255,26 @@ class Grid:
         pygame.display.update() 
         time.sleep(0.05) 
 
-    def dlx_select(self, X, Y, r):  # X = dict, Y = dict, r = tuple 
+    def dlx_select(self, X, Y, r, win):  # X = dict, Y = dict, r = tuple 
         cols = []
         for j in Y[r]:
             for i in X[j]:
                 for k in Y[i]:
                     if k != j:
-                        X[k].remove(i)
-            cols.append(X.pop(j))
+                        X[k].remove(i) 
+                        #don't remove here
+            cols.append(X.pop(j)) 
+            #don't remove here
         return cols
 
     def dlx_deselect(self, X, Y, r, cols):
         for j in reversed(Y[r]):
-            X[j] = cols.pop()
+            X[j] = cols.pop()  # X[j] (e.g): {(8, 3, 8), (8, 3, 1), (8, 3, 4), (8, 3, 6)}
             for i in X[j]:
                 for k in Y[i]:
                     if k != j:
                         X[k].add(i)
+                        #don't remove here
 ### End Of Grid Class
 
 class Cube:
