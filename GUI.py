@@ -57,7 +57,7 @@ class Grid:
                       [0, 6, 0, 5, 0, 0, 0, 0, 9],
                       [0, 0, 4, 0, 0, 0, 0, 3, 0],
                       [0, 0, 0, 0, 0, 9, 7, 0, 0]]
-    board = start_puzzle
+    board = hardest_puzzle
 
     
     ### For debugging purposes
@@ -81,8 +81,7 @@ class Grid:
     New method. Used to reset the board when three mistakes are made or when dlx button is clicked.
     '''
     def reset(self):
-        self.board = self.start_puzzle
-        #self.board = self.hardest_puzzle
+        self.board = self.hardest_puzzle
         self.__init__(9, 9, 540, 540)
 
     def update_model(self):
@@ -163,7 +162,9 @@ class Grid:
         for i in range(self.rows):
             for j in range(self.cols):
                 if self.cubes[i][j].value == 0:
-                    return False
+                    return False 
+                #if not valid(self.model, self.cubes[i][j].value, (i, j)):  # throws error
+                #    return False
         return True
 
     def dlx_solve_sudoku(self, size, grid, win): 
@@ -274,8 +275,23 @@ class Grid:
                 for k in Y[i]:
                     if k != j:
                         X[k].add(i)
+                        #time.sleep(0.05) 
                         #don't remove here
                     #adding else here to remove doesn't work either
+                    #cannot call is_finished() as it will find the solution way before it finishes drawing
+                    #elif not self.is_finished():
+                    else:
+                        row = i[0]
+                        col = i[1]
+                        self.select(row, col)
+                        if self.cubes[row][col].temp == 0:
+                            continue
+                        self.cubes[row][col].temp = 0   
+                        self.dlx_place(self.cubes[row][col].temp)
+                        self.sketch(0)
+                        redraw_window(win, self, 0, 0) 
+                        pygame.display.update() 
+                        #time.sleep(0.05) 
 ### End Of Grid Class
 
 class Cube:
