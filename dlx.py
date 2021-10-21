@@ -3,6 +3,8 @@ class Node:
         self.num = num
         self.next = None 
         self.prev = None 
+        self.above = None
+        self.below = None
 
     def __repr__(self) -> str: 
         return self.num
@@ -99,19 +101,36 @@ Every row and col of the matrix consists of a circular doubly-linked list of nod
 '''
 class DLX:
     def __init__(self):
-        self.matrix = [[LinkedList() for x in range(9)] for y in range(9)]
+        self.test = [[1, 0, 0, 1, 0, 0, 1],
+                     [1, 0, 0, 1, 0, 0, 0],
+                     [0, 0, 0, 1, 1, 0, 1],
+                     [0, 0, 1, 0, 1, 1, 0],
+                     [0, 1, 1, 0, 0, 1, 1],
+                     [0, 1, 0, 0, 0, 0, 1]]
+        self.matrix = [[Node() for x in range(6)] for y in range(7)]
+        j = 0
         for r in self.matrix:
+            i = 0
+            print('row', i)
+            print('col:', j)
             for c in r:
-                for i in range(9):
-                    c.add_first(Node(0))
+                c.num = self.test[i][j]
+            j += 1
+            
+        # row = 0
+        # for r in self.matrix:
+        #     col = 0
+        #     for c in r:
+        #             c.add_first(Node(self.test[row][col]))
+        #             col += 1
+        #     row += 1
     
-    def print_matrix(self):
-        cnt = 1
+    def print_matrix(self): 
         for r in self.matrix:
-            for c in r:
-                print(cnt)
-                cnt += 1
-                c.print_nodes()
+            col = ""
+            for c in r: 
+                col += str(c.num) + " "
+            print(col)
     
     def solve(self):
         print("pseudo-code")
