@@ -112,6 +112,20 @@ class DLX:
                 print(cnt)
                 cnt += 1
                 c.print_nodes()
+    
+    def solve(self):
+        print("pseudo-code")
+        '''
+        solution = []
+        while matrix is not empty:
+            choose col c
+                choose row r
+                    solution.add(r)
+                    for each j such that matrix(r, j) == 1:
+                        delete col j
+                        for each i such that matrix(i, j) == 1:
+                            delete row i
+        ''' 
 
 
 # list1 = LinkedList()
