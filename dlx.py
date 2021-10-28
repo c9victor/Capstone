@@ -1,158 +1,229 @@
 class Node:
-    def __init__(self, num=None):
+    def __init__(self, num=0): 
         self.num = num
-        self.next = None 
-        self.prev = None 
-        self.above = None
-        self.below = None
+        self.rowID = None
+        self.colID = None
+        self.right = None 
+        self.left = None 
+        self.up = None
+        self.down = None
+        self.column = None
 
-    def __repr__(self) -> str: 
-        return self.num
-
-
-class LinkedList:
-    def __init__(self):
-        self.head = None
-        self.last = None
-    
-    def print_nodes(self):
-        node = self.head
-        if node is None:
-            return
-        string = str(node.num)
-        node = node.next
-        while node is not self.head:
-            string = string + " " + str(node.num)
-            node = node.next
-        print(string)
-
-    def print_list(self):
-        # list is empty
-        if self.head is None:
-            print("Empty")
-            return
-        node = self.head 
-        # only one Node exists
-        if node.next == node.prev == node:
-            print("Prev:", node.prev.num, "\tVal: ", node.num, "\tNext:", node.next.num)
-            return
-        # two Nodes exists
-        if node.next == node.prev:
-            print("Prev:", node.prev.num, "\tVal: ", node.num, "\tNext:", node.next.num)
-            print("Prev:", node.num, "\tVal: ", node.next.num, "\tNext:", node.num)
-            return
-
-        # general
-        print("Prev:", node.prev.num, "\tVal: ", node.num, "\tNext:", node.next.num)
-        node = node.next
-        while node is not self.head:
-            print("Prev:", node.prev.num, "\tVal: ", node.num, "\tNext:", node.next.num)
-            node = node.next
-
-    def add_first(self, node):
-        # only one Node exists
-        if self.head is None:
-            self.head = node
-            self.last = node
-            self.head.next = self.head
-            self.head.prev = self.head
-            return
-        # adding a second Node
-        if self.head.next == self.head:
-            self.head.next = node
-            node.prev = self.head
-        # general
-        else:
-            node.prev = self.last
-            self.last.next = node
-        if self.head is not None:
-            self.head.prev = node   
-        node.next = self.head   
-        self.head = node   
-    
-    #NOT FINISHED YET
-    def add_last(self, node):
-        if self.last is None:
-            self.last = node
-            self.last.next = self.last
-            self.last.prev = self.last
-            return
-        if self.last is not None:
-            self.last.next = node
-        node.prev = self.last
-        self.last = node 
-
-    def remove(self, num):
-        travel = self.head
-        while travel.num != num:
-            travel = travel.next
-        if travel == self.head:
-            self.head = self.head.next
-        if travel == self.last:
-            self.last = self.last.prev
-        travel.next.prev = travel.prev
-        travel.prev.next = travel.next
-
-    def restore(self, num):
-        print('how do')
-
-'''
-Every row and col of the matrix consists of a circular doubly-linked list of nodes
-'''
 class DLX:
-    def __init__(self):
-        self.test = [[1, 0, 0, 1, 0, 0, 1],
-                     [1, 0, 0, 1, 0, 0, 0],
-                     [0, 0, 0, 1, 1, 0, 1],
-                     [0, 0, 1, 0, 1, 1, 0],
-                     [0, 1, 1, 0, 0, 1, 1],
-                     [0, 1, 0, 0, 0, 0, 1]]
-        self.matrix = [[Node() for x in range(6)] for y in range(7)]
-        j = 0
-        for r in self.matrix:
-            i = 0
-            print('row', i)
-            print('col:', j)
-            for c in r:
-                c.num = self.test[i][j]
-            j += 1
-            
-        # row = 0
-        # for r in self.matrix:
-        #     col = 0
-        #     for c in r:
-        #             c.add_first(Node(self.test[row][col]))
-        #             col += 1
-        #     row += 1
-    
-    def print_matrix(self): 
-        for r in self.matrix:
-            col = ""
-            for c in r: 
-                col += str(c.num) + " "
-            print(col)
-    
-    def solve(self):
-        print("pseudo-code")
+    def __init__(self, board):
+        self.test = board 
+        # self.test = [[1, 0, 0, 1, 0, 0, 1],
+        #              [1, 0, 0, 1, 0, 0, 0],
+        #              [0, 0, 0, 1, 1, 0, 1],
+        #              [0, 0, 1, 0, 1, 1, 0],
+        #              [0, 1, 1, 0, 0, 1, 1],
+        #              [0, 1, 0, 0, 0, 0, 1]]
+        self.head = Node() 
+        self.matrix = [[Node() for x in range(20)] for y in range(20)]
+        self.numProbRows = 9  # 6
+        self.numProbCols = 9  # 7
+        self.problem_matrix = [[False for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # need 1 extra for header
+        self.solutions = []
+
         '''
-        solution = []
-        while matrix is not empty:
-            choose col c
-                choose row r
-                    solution.add(r)
-                    for each j such that matrix(r, j) == 1:
-                        delete col j
-                        for each i such that matrix(i, j) == 1:
-                            delete row i
-        ''' 
+        Initialize the problem matrix based on the given input
+        '''
+        for i in range(len(self.problem_matrix)):
+            for j in range(len(self.problem_matrix[0])):
+                # set the header column to True
+                if i == 0:
+                    self.problem_matrix[i][j] = True
+                elif self.test[i-1][j] == 1:
+                    self.problem_matrix[i][j] = True
+    
+    '''
+    Prints the problem matrix. Useful for debugging
+    '''
+    def print_problem_matrix(self): 
+        for r in self.problem_matrix:
+            i = ""
+            for c in r:
+                i += str(c) + " "
+            print(i)
+
+    def getRight(self, index):
+        return (index + 1) % self.numProbCols    
+    
+    def getLeft(self, index):
+        return (self.numProbCols - 1) if (index - 1 < 0) else (index - 1)
+
+    def getUp(self, index):
+        return (self.numProbRows) if (index - 1 < 0) else (index - 1)  
+
+    def getDown(self, index):
+        return (index + 1) % (self.numProbRows + 1)
+
+    def createLinkedMatrix(self):
+        for i in range(self.numProbRows + 1):
+            for j in range(self.numProbCols):
+                if self.problem_matrix[i][j]:
+                    '''
+                    if i is 1 and it's not a part of the column header
+                    increment node count of column header
+                    '''
+                    if i:
+                        self.matrix[0][j].num += 1
+                    
+                    # add "pointer" to column header
+                    self.matrix[i][j].column = self.matrix[0][j]
+                    # set row and col ID
+                    self.matrix[i][j].rowID = i
+                    self.matrix[i][j].colID = j
+
+                    # link node to neighbors
+                    a = i
+                    b = j
+
+                    # left "pointer"
+                    b = self.getLeft(b)
+                    while not self.problem_matrix[a][b] and b != j:
+                        b = self.getLeft(b)
+                    self.matrix[i][j].left = self.matrix[i][b]
+
+                    # right "pointer"
+                    b = j
+                    b = self.getRight(b)
+                    while not self.problem_matrix[a][b] and b != j:
+                        b = self.getRight(b)
+                    self.matrix[i][j].right = self.matrix[i][b]
+
+                    # up "pointer"
+                    b = j
+                    a = self.getUp(a)
+                    while not self.problem_matrix[a][b] and a != i:
+                        a = self.getUp(a)
+                    self.matrix[i][j].up = self.matrix[a][j]
+
+                    # down "pointer"
+                    a = i
+                    a = self.getDown(a)
+                    while not self.problem_matrix[a][b] and a != i:
+                        a = self.getDown(a) 
+                    self.matrix[i][j].down = self.matrix[a][j]
+        #link header right pointer to col header of the 1st col
+        self.head.right = self.matrix[0][0]
+
+        #link header left pointer to col header of the last col
+        self.head.left = self.matrix[0][self.numProbCols - 1]
+
+        self.matrix[0][0].left = self.head
+        self.matrix[0][self.numProbCols - 1].right = self.head
+        return self.head
+    
+    def cover(self, target): 
+        #get the pointer to the col header
+        #to which this node belongs 
+        colNode = target.column 
+
+        #unlink column header from it's neighbors
+        colNode.left.right = colNode.right
+        colNode.right.left = colNode.left
+
+        #Move down the column and remove each row by traversing right
+        row = colNode.down
+        while row != colNode:
+            rightNode = row.right 
+            while rightNode != row:
+                rightNode.up.down = rightNode.down
+                rightNode.down.up = rightNode.up
+    
+                #after unlinking row node, decrement the
+                #node count in column header
+                self.matrix[0][rightNode.colID].num -= 1
+
+                #traverse
+                rightNode = rightNode.right 
+            row = row.down 
+    
+    def uncover(self, target):# get the pointer to the header of column
+        # to which this node belong  
+        colNode = target.column
+    
+        # Move down the column and link back
+        # each row by traversing left
+
+        rowNode = colNode.up 
+        while rowNode != colNode:
+            leftNode = rowNode.left
+            while leftNode != rowNode:
+                leftNode.up.down = leftNode
+                leftNode.down.up = leftNode
+    
+                # after linking row node, increment the
+                # node count in column header
+                self.matrix[0][leftNode.colID].num += 1
+
+                leftNode = leftNode.left
+            rowNode = rowNode.up
+    
+        # link the column header from it's neighbors
+        colNode.left.right = colNode
+        colNode.right.left = colNode
+
+    def getMinColumn(self): 
+        h = self.head
+        min_col = h.right
+        h = h.right.right
+        
+        if h.num < min_col.num:
+            min_col = h
+        h = h.right
+        while h != self.head:
+            if h.num < min_col.num:
+                min_col =h
+            h = h.right
+    
+        return min_col
+    
+    def printSolutions(self):
+        solution = ""
+        for i in self.solutions:
+            solution += str(i.rowID) + " "
+        print('Printing Solutions:', solution) 
+    
+    # searches for all exact cover solutions
+    def search(self, num): 
+        # if no column left, then we must
+        # have found the solution
+        if(self.head.right == self.head):
+            self.printSolutions()
+            return
+        
+        #deterministically choose the smallest col
+        column = self.getMinColumn() 
+        #cover chosen col 
+        self.cover(column)
+        
+        rowNode = column.down
+        while rowNode != column:
+            rightNode = rowNode.right
+            self.solutions.append(rowNode) # push()
+            while rightNode != rowNode:
+                self.cover(rightNode)
+                rightNode = rightNode.right
+
+            #recursively move to level k+1
+            self.search(num+1)
+
+            # if solution in not possible, backtrack (uncover)
+            # and remove the selected row (set) from solution
+            self.solutions.pop() 
+            
+            column = rowNode.column
+            leftNode = rowNode.left
+            while leftNode != rowNode:
+                self.uncover(leftNode)
+                leftNode = leftNode.left
+
+            rowNode = rowNode.down
+        self.uncover(column)    
 
 
-# list1 = LinkedList()
-# list1.add_first(Node(3))
-# list1.add_first(Node(4))
-# list1.add_first(Node(5))
-# list1.print_nodes()
-# list1.remove(5) 
-# list1.print_list()
-dlx = DLX()
-dlx.print_matrix()
+#dlx = DLX() 
+#dlx.createLinkedMatrix()
+#dlx.search(0)
