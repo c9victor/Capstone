@@ -19,7 +19,7 @@
 
 import pygame
 import puzzle_retriever
-import dlx2
+import dlx
 #import numpy as np  # added by me
 from itertools import product  # needed for dlx implementation
 from solver import solve, valid
@@ -128,6 +128,20 @@ class Grid:
                 #if not valid(self.model, self.cubes[i][j].value, (i, j)):  # throws error
                 #    return False
         return True
+    
+    ''' Most likely still need this
+    def dlx_sketch(self, r, win):
+        row = r[0]
+        col = r[1]
+        self.select(row, col)
+        self.cubes[row][col].temp = r[2]   
+        if (self.cubes[row][col].temp != 0):
+            self.dlx_place(self.cubes[row][col].temp)
+        self.sketch(r[2])
+        redraw_window(win, self, 0, 0) 
+        pygame.display.update() 
+        time.sleep(0.05) 
+    '''
 ### End Of Grid Class
 
 class Cube:
@@ -270,10 +284,9 @@ def main():
                     print("DLX Button Clicked!!!") 
                     board.reset()  
                     #list(board.dlx_solve_sudoku((3, 3), board.board, win))
-                    dlx = dlx2.DLX(board.board)
-                    dlx.createLinkedMatrix()
-                    dlx.search(0)
-
+                    dancing_links = dlx.DLX(board.board)
+                    dancing_links.createLinkedMatrix()
+                    dancing_links.search(0)
 
         if board.selected and key != None:
             board.sketch(key)
