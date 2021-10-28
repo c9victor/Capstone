@@ -1,3 +1,5 @@
+import numpy as np
+
 class Node:
     def __init__(self, num=0): 
         self.num = num
@@ -10,8 +12,40 @@ class Node:
         self.column = None
 
 class DLX:
-    def __init__(self, board):
-        self.test = board 
+    def __init__(self, board=None):
+        '''
+        need to build a constraint matrix:
+        324 columns (4 constraints * 81 positions)
+        729 rows (9 possibilities * 81 positions)
+
+        a solved sudoku puzzle has 81 assignments, so
+        it will have 81 rows in the DLX solution, each
+        filling in 4 of the 324 columns.
+        '''
+        if board:
+            self.test = board 
+        else: 
+            self.test = [[4, 0, 3, 0, 6, 0, 0, 9, 0],
+                         [0, 0, 1, 3, 7, 0, 8, 2, 0],
+                         [0, 0, 0, 0, 0, 8, 0, 1, 0], 
+                         [5, 0, 0, 0, 0, 0, 3, 4, 6], 
+                         [6, 0, 0, 0, 8, 9, 0, 0, 0], 
+                         [0, 2, 7, 0, 0, 0, 0, 0, 5], 
+                         [8, 0, 0, 7, 3, 4, 2, 0, 0], 
+                         [0, 0, 9, 8, 0, 6, 0, 0, 1], 
+                         [0, 7, 5, 0, 2, 1, 0, 0, 0]]
+        '''
+        solution = 
+        [[4 8 3 1 6 2 5 9 7]
+         [9 6 1 3 7 5 8 2 4]
+         [7 5 2 4 9 8 6 1 3]
+         [5 9 8 2 1 7 3 4 6]
+         [6 3 4 5 8 9 1 7 2]
+         [1 2 7 6 4 3 9 8 5]
+         [8 1 6 7 3 4 2 5 9]
+         [2 4 9 8 5 6 7 3 1]
+         [3 7 5 9 2 1 4 6 8]]
+        '''
         # self.test = [[1, 0, 0, 1, 0, 0, 1],
         #              [1, 0, 0, 1, 0, 0, 0],
         #              [0, 0, 0, 1, 1, 0, 1],
@@ -20,22 +54,68 @@ class DLX:
         #              [0, 1, 0, 0, 0, 0, 1]]
         self.head = Node() 
         self.matrix = [[Node() for x in range(20)] for y in range(20)]
-        self.numProbRows = 9  # 6
-        self.numProbCols = 9  # 7
+        self.numProbRows = 729  # 6
+        self.numProbCols = 324  # 7
         self.problem_matrix = [[False for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # need 1 extra for header
         self.solutions = []
 
+        self.build_constraint_matrix(self.test)
         '''
         Initialize the problem matrix based on the given input
         '''
-        for i in range(len(self.problem_matrix)):
-            for j in range(len(self.problem_matrix[0])):
-                # set the header column to True
-                if i == 0:
-                    self.problem_matrix[i][j] = True
-                elif self.test[i-1][j] == 1:
-                    self.problem_matrix[i][j] = True
+        # for i in range(len(self.problem_matrix)):
+        #     for j in range(len(self.problem_matrix[0])):
+        #         # set the header column to True
+        #         if i == 0:
+        #             self.problem_matrix[i][j] = True
+        #         elif self.test[i-1][j] == 1:
+        #             self.problem_matrix[i][j] = True
     
+    def build_constraint_matrix(self, board): 
+        rc_constraint = [0] * 81
+        rn_constraint = [0] * 81
+        cn_constraint = [0] * 81
+        bn_constraint = [0] * 81 
+        for r in range(len(board)):
+            num = 0
+            for c in range(len(board[0])):
+                if board[r][c] != 0: 
+                    rc_constraint[r*9 + c] = 1 
+                    rn_constraint[c*9 + num] = 1  # may need to add 1
+                    cn_constraint[r*9 + num] = 1  # double-check this one
+                    #bn_constraint[something] = 1 
+                num += 1
+        '''
+        flattened = np.array(board).flatten() 
+        row = col = counter = 0
+        for val in flattened:
+            for r in range(len(board)):
+                for c in range(len(board[0])):
+                    if board[r][c] == val and r == row and c == col:
+                        print('val:', val)
+                        print('board[r][c]:', str(board[r][c]))
+                        print('row:', str(row))
+                        print('col:', str(board[r][c]))
+                        rc_constraint.append(1)
+                    else:
+                        rc_constraint.append(0)
+            # concatenate the 4 constraints together 
+            # and add new row for next position
+            counter += 1
+            if counter == 9:
+                row += 1
+                col = 0
+            else:
+                col += 1
+        #print(len(rc_constraint))
+        count = 0
+        for i in rc_constraint:
+            if i == 1:
+                count += 1
+        print(count)
+        '''
+        return 0
+
     '''
     Prints the problem matrix. Useful for debugging
     '''
@@ -58,6 +138,9 @@ class DLX:
     def getDown(self, index):
         return (index + 1) % (self.numProbRows + 1)
 
+    '''
+    Creates the circular doubly-linked list
+    '''
     def createLinkedMatrix(self):
         for i in range(self.numProbRows + 1):
             for j in range(self.numProbCols):
@@ -140,7 +223,8 @@ class DLX:
                 rightNode = rightNode.right 
             row = row.down 
     
-    def uncover(self, target):# get the pointer to the header of column
+    def uncover(self, target):
+        # get the pointer to the header of column
         # to which this node belong  
         colNode = target.column
     
@@ -165,6 +249,9 @@ class DLX:
         colNode.left.right = colNode
         colNode.right.left = colNode
 
+    '''
+    Get the column with the smallest amount of ones
+    '''
     def getMinColumn(self): 
         h = self.head
         min_col = h.right
@@ -221,9 +308,9 @@ class DLX:
                 leftNode = leftNode.left
 
             rowNode = rowNode.down
-        self.uncover(column)    
+        self.uncover(column)
 
 
-#dlx = DLX() 
-#dlx.createLinkedMatrix()
-#dlx.search(0)
+dlx = DLX() 
+# dlx.createLinkedMatrix()
+# dlx.search(0)
