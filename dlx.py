@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np  # not being used currently
 
 class Node:
     def __init__(self, num=0): 
@@ -51,70 +51,56 @@ class DLX:
         #              [0, 0, 0, 1, 1, 0, 1],
         #              [0, 0, 1, 0, 1, 1, 0],
         #              [0, 1, 1, 0, 0, 1, 1],
-        #              [0, 1, 0, 0, 0, 0, 1]]
-        self.head = Node() 
-        self.matrix = [[Node() for x in range(20)] for y in range(20)]
-        self.numProbRows = 729  # 6
-        self.numProbCols = 324  # 7
+        #              [0, 1, 0, 0, 0, 0, 1],
+        #              [1, 0, 0, 1, 0, 0, 0]]
+        self.head = Node()
+        self.numProbRows = 729  #729 7
+        self.numProbCols = 324  #324 7
+        self.matrix = [[Node() for x in range(self.numProbCols)] for y in range(self.numProbRows)]
         self.problem_matrix = [[False for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # need 1 extra for header
         self.solutions = []
 
-        self.build_constraint_matrix(self.test)
+        self.constraint_matrix = self.build_constraint_matrix(self.test)
+        # print('constraint_matrix # cols:', len(self.constraint_matrix))
+        # print('constraint_matrix # rows:', len(self.constraint_matrix[0]))
+        # print('problem_matrix # cols:', len(self.problem_matrix))
+        # print('problem_matrix # rows:', len(self.problem_matrix[0]))
+        # print('matrix # cols:', len(self.matrix))
+        # print('matrix # rows:', len(self.matrix[0]))
         '''
         Initialize the problem matrix based on the given input
         '''
-        # for i in range(len(self.problem_matrix)):
-        #     for j in range(len(self.problem_matrix[0])):
-        #         # set the header column to True
-        #         if i == 0:
-        #             self.problem_matrix[i][j] = True
-        #         elif self.test[i-1][j] == 1:
-        #             self.problem_matrix[i][j] = True
+        for i in range(len(self.problem_matrix)):
+            for j in range(len(self.problem_matrix[0])):
+                # set the header column to True
+                if i == 0:
+                    self.problem_matrix[i][j] = True
+                elif self.constraint_matrix[i-1][j] == 1:
+                    self.problem_matrix[i][j] = True
     
-    def build_constraint_matrix(self, board): 
-        rc_constraint = [0] * 81
-        rn_constraint = [0] * 81
-        cn_constraint = [0] * 81
-        bn_constraint = [0] * 81 
+    def build_constraint_matrix(self, board):
+        constraint_matrix = [[0] * self.numProbCols] * self.numProbRows
+        numPositions = 81
+        num_iters = 0
         for r in range(len(board)):
-            num = 0
-            for c in range(len(board[0])):
-                if board[r][c] != 0: 
-                    rc_constraint[r*9 + c] = 1 
-                    rn_constraint[c*9 + num] = 1  # may need to add 1
-                    cn_constraint[r*9 + num] = 1  # double-check this one
-                    #bn_constraint[something] = 1 
-                num += 1
-        '''
-        flattened = np.array(board).flatten() 
-        row = col = counter = 0
-        for val in flattened:
-            for r in range(len(board)):
-                for c in range(len(board[0])):
-                    if board[r][c] == val and r == row and c == col:
-                        print('val:', val)
-                        print('board[r][c]:', str(board[r][c]))
-                        print('row:', str(row))
-                        print('col:', str(board[r][c]))
-                        rc_constraint.append(1)
-                    else:
-                        rc_constraint.append(0)
-            # concatenate the 4 constraints together 
-            # and add new row for next position
-            counter += 1
-            if counter == 9:
-                row += 1
-                col = 0
-            else:
-                col += 1
-        #print(len(rc_constraint))
-        count = 0
-        for i in rc_constraint:
-            if i == 1:
-                count += 1
-        print(count)
-        '''
-        return 0
+            for c in range(len(board[0])):        
+                for num in range(1, 10):  # iterates through 1-9
+                    # want to reset the constraints for every 81 positions on the board
+                    rc_constraint = [0] * numPositions  # row col constraint
+                    rn_constraint = [0] * numPositions  # row number constraint
+                    cn_constraint = [0] * numPositions  # col number constraint
+                    bn_constraint = [0] * numPositions  # box number constraint
+                    if board[r][c] == num: 
+                        rc_constraint[r*9 + c] = 1 
+                        rn_constraint[c*9 + num - 1] = 1
+                        cn_constraint[r*9 + num - 1] = 1
+                        # // represents floor division
+                        bn_constraint[((r // 3) * 3 + (c // 3)) * 9 + num - 1] = 1  # b * 9 + (num - 1) 
+                        # concatenate cosntraints together
+                        constraint_matrix[num_iters] = rc_constraint + rn_constraint + cn_constraint + bn_constraint 
+                    num_iters += 1
+        
+        return constraint_matrix
 
     '''
     Prints the problem matrix. Useful for debugging
@@ -126,22 +112,22 @@ class DLX:
                 i += str(c) + " "
             print(i)
 
-    def getRight(self, index):
+    def get_right(self, index):
         return (index + 1) % self.numProbCols    
     
-    def getLeft(self, index):
+    def get_left(self, index):
         return (self.numProbCols - 1) if (index - 1 < 0) else (index - 1)
 
-    def getUp(self, index):
+    def get_up(self, index):
         return (self.numProbRows) if (index - 1 < 0) else (index - 1)  
 
-    def getDown(self, index):
+    def get_down(self, index):
         return (index + 1) % (self.numProbRows + 1)
 
     '''
     Creates the circular doubly-linked list
     '''
-    def createLinkedMatrix(self):
+    def create_linked_matrix(self):
         for i in range(self.numProbRows + 1):
             for j in range(self.numProbCols):
                 if self.problem_matrix[i][j]:
@@ -163,30 +149,30 @@ class DLX:
                     b = j
 
                     # left "pointer"
-                    b = self.getLeft(b)
+                    b = self.get_left(b)
                     while not self.problem_matrix[a][b] and b != j:
-                        b = self.getLeft(b)
+                        b = self.get_left(b)
                     self.matrix[i][j].left = self.matrix[i][b]
 
                     # right "pointer"
                     b = j
-                    b = self.getRight(b)
+                    b = self.get_right(b)
                     while not self.problem_matrix[a][b] and b != j:
-                        b = self.getRight(b)
+                        b = self.get_right(b)
                     self.matrix[i][j].right = self.matrix[i][b]
 
                     # up "pointer"
                     b = j
-                    a = self.getUp(a)
+                    a = self.get_up(a)
                     while not self.problem_matrix[a][b] and a != i:
-                        a = self.getUp(a)
+                        a = self.get_up(a)
                     self.matrix[i][j].up = self.matrix[a][j]
 
                     # down "pointer"
                     a = i
-                    a = self.getDown(a)
+                    a = self.get_down(a)
                     while not self.problem_matrix[a][b] and a != i:
-                        a = self.getDown(a) 
+                        a = self.get_down(a) 
                     self.matrix[i][j].down = self.matrix[a][j]
         #link header right pointer to col header of the 1st col
         self.head.right = self.matrix[0][0]
@@ -199,15 +185,15 @@ class DLX:
         return self.head
     
     def cover(self, target): 
-        #get the pointer to the col header
-        #to which this node belongs 
+        # get the pointer to the col header
+        # to which this node belongs 
         colNode = target.column 
 
-        #unlink column header from it's neighbors
+        # unlink column header from it's neighbors
         colNode.left.right = colNode.right
         colNode.right.left = colNode.left
 
-        #Move down the column and remove each row by traversing right
+        # move down the column and remove each row by traversing right
         row = colNode.down
         while row != colNode:
             rightNode = row.right 
@@ -215,11 +201,11 @@ class DLX:
                 rightNode.up.down = rightNode.down
                 rightNode.down.up = rightNode.up
     
-                #after unlinking row node, decrement the
-                #node count in column header
+                # after unlinking row node, decrement the
+                # node count in column header
                 self.matrix[0][rightNode.colID].num -= 1
 
-                #traverse
+                # traverse
                 rightNode = rightNode.right 
             row = row.down 
     
@@ -228,7 +214,7 @@ class DLX:
         # to which this node belong  
         colNode = target.column
     
-        # Move down the column and link back
+        # move down the column and link back
         # each row by traversing left
 
         rowNode = colNode.up 
@@ -252,7 +238,7 @@ class DLX:
     '''
     Get the column with the smallest amount of ones
     '''
-    def getMinColumn(self): 
+    def get_min_column(self): 
         h = self.head
         min_col = h.right
         h = h.right.right
@@ -262,42 +248,47 @@ class DLX:
         h = h.right
         while h != self.head:
             if h.num < min_col.num:
-                min_col =h
+                min_col = h
             h = h.right
     
         return min_col
     
-    def printSolutions(self):
+    def print_solutions(self):
         solution = ""
         for i in self.solutions:
             solution += str(i.rowID) + " "
-        print('Printing Solutions:', solution) 
+        print('Printing Solutions:', solution)
     
     # searches for all exact cover solutions
-    def search(self, num): 
+    def search(self, num):  
         # if no column left, then we must
         # have found the solution
         if(self.head.right == self.head):
-            self.printSolutions()
-            return
-        
-        #deterministically choose the smallest col
-        column = self.getMinColumn() 
-        #cover chosen col 
+            self.print_solutions()
+            return 
+        # deterministically choose the smallest col
+        column = self.get_min_column() 
+        # cover chosen col 
         self.cover(column)
         
         rowNode = column.down
-        while rowNode != column:
-            rightNode = rowNode.right
+        
+        print('up',column.up) 
+        print('down',column.down)
+        print('left',column.left) 
+        print('right',column.right) 
+        while rowNode != column: 
             self.solutions.append(rowNode) # push()
+            
+            rightNode = rowNode.right
             while rightNode != rowNode:
                 self.cover(rightNode)
                 rightNode = rightNode.right
 
-            #recursively move to level k+1
+            # recursively move to level k+1
             self.search(num+1)
-
-            # if solution in not possible, backtrack (uncover)
+            
+            # if solution is not possible, backtrack (uncover)
             # and remove the selected row (set) from solution
             self.solutions.pop() 
             
@@ -311,6 +302,7 @@ class DLX:
         self.uncover(column)
 
 
-dlx = DLX() 
-# dlx.createLinkedMatrix()
-# dlx.search(0)
+dlx = DLX()  
+dlx.create_linked_matrix()
+print('searching for solutions...')
+dlx.search(0)
