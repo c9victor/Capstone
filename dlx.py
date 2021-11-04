@@ -54,19 +54,13 @@ class DLX:
         #              [0, 1, 0, 0, 0, 0, 1],
         #              [1, 0, 0, 1, 0, 0, 0]]
         self.head = Node()
-        self.numProbRows = 729  #729 7
-        self.numProbCols = 324  #324 7
-        self.matrix = [[Node() for x in range(self.numProbCols)] for y in range(self.numProbRows)]
+        self.numProbRows = 729  # 7
+        self.numProbCols = 324  # 7
+        self.matrix = [[Node() for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]
         self.problem_matrix = [[False for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # need 1 extra for header
+        self.constraint_matrix = self.build_constraint_matrix(self.test)  #constraint matrix of 1's and 0's is used to build problem matrix
         self.solutions = []
 
-        self.constraint_matrix = self.build_constraint_matrix(self.test)
-        # print('constraint_matrix # cols:', len(self.constraint_matrix))
-        # print('constraint_matrix # rows:', len(self.constraint_matrix[0]))
-        # print('problem_matrix # cols:', len(self.problem_matrix))
-        # print('problem_matrix # rows:', len(self.problem_matrix[0]))
-        # print('matrix # cols:', len(self.matrix))
-        # print('matrix # rows:', len(self.matrix[0]))
         '''
         Initialize the problem matrix based on the given input
         '''
@@ -90,17 +84,55 @@ class DLX:
                     rn_constraint = [0] * numPositions  # row number constraint
                     cn_constraint = [0] * numPositions  # col number constraint
                     bn_constraint = [0] * numPositions  # box number constraint
-                    if board[r][c] == num: 
+                    '''
+                    For squares that are already filled, you generate the one row that describes that assignment.
+                    Else, generate the possibility that it is each number, one thru 9
+
+                    if board[r][c] != 0 and board[r][c] == num:
+                        generate row
+                    elif board[r][c] == 0:
+                        generate every possibility
+
+                    OR MAYBE
+
+                    if (board[r][c] != 0 and board[r][c] == num) or board[r][c] == 0:
+                        generate possibility
+                    '''
+                    if (board[r][c] != 0 and board[r][c] == num) or board[r][c] == 0: 
                         rc_constraint[r*9 + c] = 1 
                         rn_constraint[c*9 + num - 1] = 1
                         cn_constraint[r*9 + num - 1] = 1
                         # // represents floor division
                         bn_constraint[((r // 3) * 3 + (c // 3)) * 9 + num - 1] = 1  # b * 9 + (num - 1) 
                         # concatenate cosntraints together
-                        constraint_matrix[num_iters] = rc_constraint + rn_constraint + cn_constraint + bn_constraint 
+                        constraint_matrix[num_iters] = rc_constraint + rn_constraint + cn_constraint + bn_constraint  
                     num_iters += 1
         
         return constraint_matrix
+
+    def map_solved_to_board(self):
+        '''
+        for row in solutions:
+            grab row/col info from 1st constraint
+            grab number out of 2nd constraint
+        '''
+        # rc_constraint[r*9 + c] = 1 
+        # rn_constraint[c*9 + num - 1] = 1
+        # reverse enginer the above ^ 
+        for solution in self.solutions:
+            # for i in self.solutions:
+            #   solution += str(i.rowID) + " "
+            row = solution.rowID
+            print(self.constraint_matrix[row-1])
+            first = self.constraint_matrix[row-1].index(1)
+            second = self.constraint_matrix[row-1].index(1, 81)
+            print(first)
+            print(second)
+            break
+            row = 0
+            col = 0
+            num = 0
+        return 0
 
     '''
     Prints the problem matrix. Useful for debugging
@@ -165,7 +197,7 @@ class DLX:
                     b = j
                     a = self.get_up(a)
                     while not self.problem_matrix[a][b] and a != i:
-                        a = self.get_up(a)
+                        a = self.get_up(a) 
                     self.matrix[i][j].up = self.matrix[a][j]
 
                     # down "pointer"
@@ -216,7 +248,6 @@ class DLX:
     
         # move down the column and link back
         # each row by traversing left
-
         rowNode = colNode.up 
         while rowNode != colNode:
             leftNode = rowNode.left
@@ -239,6 +270,23 @@ class DLX:
     Get the column with the smallest amount of ones
     '''
     def get_min_column(self): 
+        # h = self.head
+        # min_col = h.right
+        # h = h.right.right
+
+        # while min_col.num == 0 and h != self.head:
+        #     min_col = h 
+        #     h = h.right
+
+        # if h.num < min_col.num and h.num != 0:
+        #     min_col = h
+        # h = h.right
+
+        # while h != self.head:
+        #     if h.num < min_col.num and h.num != 0:
+        #         min_col = h
+        #     h = h.right
+
         h = self.head
         min_col = h.right
         h = h.right.right
@@ -254,7 +302,7 @@ class DLX:
         return min_col
     
     def print_solutions(self):
-        solution = ""
+        solution = ""  
         for i in self.solutions:
             solution += str(i.rowID) + " "
         print('Printing Solutions:', solution)
@@ -265,18 +313,16 @@ class DLX:
         # have found the solution
         if(self.head.right == self.head):
             self.print_solutions()
+            self.map_solved_to_board()
             return 
         # deterministically choose the smallest col
         column = self.get_min_column() 
         # cover chosen col 
         self.cover(column)
         
-        rowNode = column.down
+        rowNode = column.down 
         
-        print('up',column.up) 
-        print('down',column.down)
-        print('left',column.left) 
-        print('right',column.right) 
+        # gets stuck because rowNode == column
         while rowNode != column: 
             self.solutions.append(rowNode) # push()
             
@@ -305,4 +351,5 @@ class DLX:
 dlx = DLX()  
 dlx.create_linked_matrix()
 print('searching for solutions...')
-dlx.search(0)
+dlx.search(0) 
+#dlx.map_solved_to_board()
