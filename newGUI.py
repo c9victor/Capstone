@@ -28,7 +28,7 @@ pygame.font.init()
 
 
 class Grid:
-    start_puzzle = puzzle_retriever.getPuzzle()
+    start_puzzle = puzzle_retriever.get_puzzle()
     hardest_puzzle = [[0, 0, 5, 3, 0, 0, 0, 0, 0],
                       [8, 0, 0, 0, 0, 0, 0, 2, 0],
                       [0, 7, 0, 0, 1, 0, 5, 0, 0],
