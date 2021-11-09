@@ -10,12 +10,12 @@ The information in the puzzle column is parsed so that we can create a sudoku bo
 If the puzzle is not of an acceptable difficulty level then a new one is retrieved.
 Note that the first line of the file contains headers; do not attempt to parse it as a puzzle
 '''
-def getPuzzle(diff=2): 
+def get_puzzle(diff=2): 
     puzzleNum = random.randint(1, 3000001) 
     #print("Puzzle Number:", puzzleNum) 
     puzzle = linecache.getline("sudoku-3m.csv", puzzleNum)
     puzzle = puzzle.split(',')
-    while (not checkDiff(puzzle, diff)):
+    while (not check_diff(puzzle, diff)):
         puzzleNum = random.randint(1, 3000001) 
         #print("Puzzle Number:", puzzleNum) 
         puzzle = linecache.getline("sudoku-3m.csv", puzzleNum)
@@ -30,7 +30,7 @@ def getPuzzle(diff=2):
 Checks the difficulty level of the given puzzle to make sure it is acceptable.
 1 = Easy, 2 = Medium, 3 = Hard
 '''
-def checkDiff(puzzle, diff): 
+def check_diff(puzzle, diff): 
     pdiff = np.double(puzzle[4]) 
     #print("diff", diff, "pdiff", pdiff)
     if diff == 1 and pdiff < 1.5: 
