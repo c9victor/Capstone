@@ -1,4 +1,4 @@
-import numpy as np  # not being used currently
+import puzzle_retriever
 
 class Node:
     def __init__(self, num=0): 
@@ -12,7 +12,7 @@ class Node:
         self.column = None
 
 class DLX:
-    def __init__(self, board=None):
+    def __init__(self):
         '''
         need to build a constraint matrix:
         324 columns (4 constraints * 81 positions)
@@ -22,43 +22,13 @@ class DLX:
         it will have 81 rows in the DLX solution, each
         filling in 4 of the 324 columns.
         '''
-        if board:
-            self.test = board 
-        else: 
-            self.test = [[4, 0, 3, 0, 6, 0, 0, 9, 0],
-                         [0, 0, 1, 3, 7, 0, 8, 2, 0],
-                         [0, 0, 0, 0, 0, 8, 0, 1, 0], 
-                         [5, 0, 0, 0, 0, 0, 3, 4, 6], 
-                         [6, 0, 0, 0, 8, 9, 0, 0, 0], 
-                         [0, 2, 7, 0, 0, 0, 0, 0, 5], 
-                         [8, 0, 0, 7, 3, 4, 2, 0, 0], 
-                         [0, 0, 9, 8, 0, 6, 0, 0, 1], 
-                         [0, 7, 5, 0, 2, 1, 0, 0, 0]]
-        '''
-        solution = 
-        [[4 8 3 1 6 2 5 9 7]
-         [9 6 1 3 7 5 8 2 4]
-         [7 5 2 4 9 8 6 1 3]
-         [5 9 8 2 1 7 3 4 6]
-         [6 3 4 5 8 9 1 7 2]
-         [1 2 7 6 4 3 9 8 5]
-         [8 1 6 7 3 4 2 5 9]
-         [2 4 9 8 5 6 7 3 1]
-         [3 7 5 9 2 1 4 6 8]]
-        '''
-        # self.test = [[1, 0, 0, 1, 0, 0, 1],
-        #              [1, 0, 0, 1, 0, 0, 0],
-        #              [0, 0, 0, 1, 1, 0, 1],
-        #              [0, 0, 1, 0, 1, 1, 0],
-        #              [0, 1, 1, 0, 0, 1, 1],
-        #              [0, 1, 0, 0, 0, 0, 1],
-        #              [1, 0, 0, 1, 0, 0, 0]]
+        self.board = puzzle_retriever.get_puzzle() 
         self.head = Node()
-        self.numProbRows = 729  # 7
-        self.numProbCols = 324  # 7
-        self.matrix = [[Node() for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]
+        self.numProbRows = 729
+        self.numProbCols = 324
+        self.matrix = [[Node() for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # matrix of LL's used by the DLX algo
         self.problem_matrix = [[False for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # need 1 extra for header
-        self.constraint_matrix = self.build_constraint_matrix(self.test)  #constraint matrix of 1's and 0's is used to build problem matrix
+        self.constraint_matrix = self.build_constraint_matrix(self.board)  # constraint matrix of 1's and 0's is used to build problem matrix
         self.solutions = []
 
         '''
@@ -79,7 +49,7 @@ class DLX:
         for r in range(len(board)):
             for c in range(len(board[0])):        
                 for num in range(1, 10):  # iterates through 1-9
-                    # want to reset the constraints for every 81 positions on the board
+                    # want to reset the constraints for every 81 positions on the board every iteration
                     rc_constraint = [0] * numPositions  # row col constraint
                     rn_constraint = [0] * numPositions  # row number constraint
                     cn_constraint = [0] * numPositions  # col number constraint
@@ -91,12 +61,7 @@ class DLX:
                     if board[r][c] != 0 and board[r][c] == num:
                         generate row
                     elif board[r][c] == 0:
-                        generate every possibility
-
-                    OR MAYBE
-
-                    if (board[r][c] != 0 and board[r][c] == num) or board[r][c] == 0:
-                        generate possibility
+                        generate every possibility 
                     '''
                     if (board[r][c] != 0 and board[r][c] == num) or board[r][c] == 0: 
                         rc_constraint[r*9 + c] = 1 
@@ -104,7 +69,7 @@ class DLX:
                         cn_constraint[r*9 + num - 1] = 1
                         # // represents floor division
                         bn_constraint[((r // 3) * 3 + (c // 3)) * 9 + num - 1] = 1  # b * 9 + (num - 1) 
-                        # concatenate cosntraints together
+                        # concatenate constraints together
                         constraint_matrix[num_iters] = rc_constraint + rn_constraint + cn_constraint + bn_constraint  
                     num_iters += 1
         
@@ -113,25 +78,25 @@ class DLX:
     def map_solved_to_board(self):
         '''
         for row in solutions:
-            grab row/col info from 1st constraint
+            grab row/col from 1st constraint
             grab number out of 2nd constraint
         '''
-        # rc_constraint[r*9 + c] = 1 
-        # rn_constraint[c*9 + num - 1] = 1
-        # reverse enginer the above ^ 
-        for solution in self.solutions:
-            # for i in self.solutions:
-            #   solution += str(i.rowID) + " "
+        for solution in self.solutions: 
             row = solution.rowID
-            print(self.constraint_matrix[row-1])
             first = self.constraint_matrix[row-1].index(1)
-            second = self.constraint_matrix[row-1].index(1, 81)
-            print(first)
-            print(second)
-            break
-            row = 0
-            col = 0
-            num = 0
+            second = self.constraint_matrix[row-1].index(1, 81)  # find:1  start_at:81 
+            row = int(first / 9) 
+            col = first % 9 
+            num = int((second - 80) % 9)
+            # w/out this if, c0 would have a 9 but c1-c8 would have 0's instead of 9's
+            if num == 0:
+                num = 9
+            self.board[row][col] = num 
+        print("solution:")
+        for i in range(len(self.board)):
+            print(self.board[i])
+        # if self.board == self.given_solution:
+        #     print('correct!')
         return 0
 
     '''
@@ -266,27 +231,8 @@ class DLX:
         colNode.left.right = colNode
         colNode.right.left = colNode
 
-    '''
-    Get the column with the smallest amount of ones
-    '''
+    # Get the column with the smallest amount of ones
     def get_min_column(self): 
-        # h = self.head
-        # min_col = h.right
-        # h = h.right.right
-
-        # while min_col.num == 0 and h != self.head:
-        #     min_col = h 
-        #     h = h.right
-
-        # if h.num < min_col.num and h.num != 0:
-        #     min_col = h
-        # h = h.right
-
-        # while h != self.head:
-        #     if h.num < min_col.num and h.num != 0:
-        #         min_col = h
-        #     h = h.right
-
         h = self.head
         min_col = h.right
         h = h.right.right
@@ -312,7 +258,7 @@ class DLX:
         # if no column left, then we must
         # have found the solution
         if(self.head.right == self.head):
-            self.print_solutions()
+            #self.print_solutions()
             self.map_solved_to_board()
             return 
         # deterministically choose the smallest col
@@ -349,7 +295,5 @@ class DLX:
 
 
 dlx = DLX()  
-dlx.create_linked_matrix()
-print('searching for solutions...')
+dlx.create_linked_matrix() 
 dlx.search(0) 
-#dlx.map_solved_to_board()
