@@ -30,9 +30,10 @@ class DLX:
         self.matrix = [[Node() for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # matrix of LL's used by the DLX algo
         self.problem_matrix = [[False for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # need 1 extra for header
         self.constraint_matrix = self.build_constraint_matrix(self.board)  # constraint matrix of 1's and 0's is used to build problem matrix
-        self.solutions = []
-        self.moves = []
-        self.final_solutions = []
+        self.solutions = [] 
+        self.final_solutions = [] 
+        self.all_covers_uncovers = []
+        self.cover_or_uncover = []
 
         '''
         Initialize the problem matrix based on the given input
@@ -86,19 +87,19 @@ class DLX:
         '''
         for solution in self.solutions: 
             self.final_solutions.append(solution)
-        #     row = solution.rowID
-        #     first = self.constraint_matrix[row-1].index(1)
-        #     second = self.constraint_matrix[row-1].index(1, 81)  # find:1  start_at:81 
-        #     row = int(first / 9) 
-        #     col = first % 9 
-        #     num = int((second - 80) % 9)
-        #     # w/out this if, c0 would have a 9 but c1-c8 would have 0's instead of 9's
-        #     if num == 0:
-        #         num = 9
-        #     self.board[row][col] = num 
-        # print("solution:")
-        # for i in range(len(self.board)):
-        #     print(self.board[i])
+            row = solution.rowID
+            first = self.constraint_matrix[row-1].index(1)
+            second = self.constraint_matrix[row-1].index(1, 81)  # find:1  start_at:81 
+            row = int(first / 9) 
+            col = first % 9 
+            num = int((second - 80) % 9)
+            # w/out this if, c0 would have a 9 but c1-c8 would have 0's instead of 9's
+            if num == 0:
+                num = 9
+            self.board[row][col] = num 
+        print("solution:")
+        for i in range(len(self.board)):
+            print(self.board[i])
         return
 
     '''
@@ -262,7 +263,7 @@ class DLX:
         # have found the solution
         if(self.head.right == self.head):
             #self.print_solutions()
-            self.map_solved_to_board()
+            #self.map_solved_to_board()
             return
 
         # deterministically choose the smallest col
@@ -274,8 +275,9 @@ class DLX:
         rowNode = column.down 
         
         while rowNode != column: 
-            self.solutions.append(rowNode)  # push()
-            self.moves.append(rowNode)  # EXPERIMENTAL
+            self.solutions.append(rowNode)  # push() 
+            self.all_covers_uncovers.append(rowNode)
+            self.cover_or_uncover.append(1)
             
             rightNode = rowNode.right
             while rightNode != rowNode:
@@ -287,8 +289,10 @@ class DLX:
             
             # if solution is not possible, backtrack (uncover)
             # and remove the selected row (set) from solution
-            self.solutions.pop() 
-            
+            x = self.solutions.pop()  
+            self.all_covers_uncovers.append(x)
+            self.cover_or_uncover.append(0)
+
             column = rowNode.column
             leftNode = rowNode.left
             while leftNode != rowNode:
@@ -302,5 +306,3 @@ class DLX:
 # dlx = DLX()  
 # dlx.create_linked_matrix() 
 # dlx.search(0) 
-# print(len(dlx.final_solutions))
-# print(len(dlx.moves))
