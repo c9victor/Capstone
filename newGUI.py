@@ -37,10 +37,8 @@ class Grid:
         self.height = height
         self.model = None
         self.selected = None
-
-    '''
-    New method. Used to reset the board when three mistakes are made or when dlx button is clicked.
-    '''
+ 
+    # New method. Used to reset the board when three mistakes are made or when dlx button is clicked. 
     def reset(self):
         self.board = self.start_puzzle
         self.__init__(9, 9, 540, 540)
@@ -74,7 +72,7 @@ class Grid:
                 thick = 4
             else:
                 thick = 1
-            pygame.draw.line(win, (0,0,0), (0, i*gap), (self.width, i*gap), thick)
+            pygame.draw.line(win, (0, 0, 0), (0, i * gap), (self.width, i * gap), thick)
             pygame.draw.line(win, (0, 0, 0), (i * gap, 0), (i * gap, self.height), thick)
 
         # Draw Cubes
@@ -113,9 +111,7 @@ class Grid:
         for i in range(self.rows):
             for j in range(self.cols):
                 if self.cubes[i][j].value == 0:
-                    return False 
-                #if not valid(self.model, self.cubes[i][j].value, (i, j)):  # throws error
-                #    return False
+                    return False
         return True
 
     def dlx_place(self, val):
@@ -151,8 +147,7 @@ class Grid:
             # we don't want to sketch over the starting clues
             if self.board[row][col] != 0: 
                 continue
-            
-            if covered[move]:
+            elif covered[move]:
                 self.dlx_sketch(row, col, num, win) 
             elif move:
                 self.dlx_sketch(row, col, 0, win) 
