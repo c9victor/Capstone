@@ -1,17 +1,16 @@
 # GUI.py - RUN THIS FILE
-import puzzle_retriever
 from SudokuSolver import *
-from puzzle_retriever import getPuzzle
+import puzzle_retriever  # our file
+from puzzle_retriever import get_puzzle
+import dlx  # our file
 import pygame
-from itertools import product  # needed for dlx implementation
 from solver import solve, valid
 import time
-
 pygame.font.init()
 
 
 class Grid:
-    board = puzzle_retriever.getPuzzle(1)
+    board = get_puzzle(1)
 
     board1 = [[0, 5, 1, 0, 6, 7, 2, 0, 8, 0, 0, 0, 9, 0, 8, 5, 6, 0, 7, 2, 0],
               [8, 7, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 5, 3],
@@ -45,7 +44,7 @@ class Grid:
         self.selected = None
 
     def new_puzzle(self, diff):
-        self.board = puzzle_retriever.getPuzzle(diff)
+        self.board = get_puzzle(diff)
 
     def reset(self, samurai):
         if samurai:
@@ -189,108 +188,7 @@ class Grid:
                     return False
         return True
 
-    def dlx_solve_sudoku(self, size, grid, win):
-        """ An efficient Sudoku solver using Algorithm X.
-
-            >>> for solution in solve((3, 3), grid, win):
-                    print(*solution, sep='\\n')
-            """
-
-        R, C = size
-        N = R * C
-        X = ([("row and column", rc) for rc in product(range(N), range(N))] +  # row col
-             [("row and number", rn) for rn in product(range(N), range(1, N + 1))] +  # row number
-             [("column and number", cn) for cn in product(range(N), range(1, N + 1))] +  # col number
-             [("number in box in row?", bn) for bn in product(range(N), range(1, N + 1))])  # box number
-        Y = dict()
-        for r, c, n in product(range(N), range(N), range(1, N + 1)):
-            b = (r // R) * R + (c // C)  # box number. // represents floor division
-            Y[(r, c, n)] = [
-                ("row and column", (r, c)),
-                ("row and number", (r, n)),
-                ("column and number", (c, n)),
-                ("number in box in row?", (b, n))]
-
-        X, Y = self.sudoku_exact_cover(X, Y)
-        for i, row in enumerate(grid):  # count of curr iteration (i) and the value at i (row)
-            for j, n in enumerate(row):  # curr iteration (j) and value at j (n)
-                if n:  # note that 1 == True in python
-                    self.sudoku_select(X, Y, (i, j, n))  # X, Y
-        for solution in self.solve(X, Y, [], win):
-            print("solution type: ", type(solution))
-            for (r, c, n) in solution:
-                # self.cubes[r][c].temp = n  # test
-                # self.place(self.cubes[r][c].temp)  # test
-                # self.sketch((int) (n))
-                grid[r][c] = n
-            yield grid
-
-    def sudoku_exact_cover(self, X, Y):
-        X = {j: set() for j in X}
-        for i, row in Y.items():
-            for j in row:
-                X[j].add(i)
-        return X, Y
-
-    def solve(self, X, Y, solution, win):
-        if not X:
-            yield list(solution)
-        else:
-            c = min(X, key=lambda c: len(X[c]))
-            for r in list(X[c]):  # note that r and c are both tuples
-                solution.append(r)
-                cols = self.sudoku_select(X, Y, r)
-                self.sudoku_sketch(r, win)
-                for s in self.solve(X, Y, solution, win):
-                    yield s
-                self.sudoku_deselect(X, Y, r, cols)
-                # self.clear(r, cols)  # test
-                remove = solution.pop()
-                row = remove[0]
-                col = remove[1]
-                self.select(row, col)
-                self.cubes[row][col].temp = 0
-                self.sudoku_place(self.cubes[row][col].temp)
-                self.sketch(0)
-                redraw_window(win, self, 0, 0)
-                pygame.display.update()
-                # time.sleep(0.05)
-
-    def sudoku_sketch(self, r, win):
-        row = r[0]
-        col = r[1]
-        self.select(row, col)
-        self.cubes[row][col].temp = r[2]
-        if self.cubes[row][col].temp != 0:
-            self.sudoku_place(self.cubes[row][col].temp)
-        self.sketch(r[2])
-        redraw_window(win, self, 0, 0)
-        pygame.display.update()
-        time.sleep(0.05)
-
-    def sudoku_select(self, x, y, r):
-        cols = []
-        for j in y[r]:
-            for i in x[j]:
-                for k in y[i]:
-                    if k != j:
-                        x[k].remove(i)
-            cols.append(x.pop(j))
-        return cols
-
-    def sudoku_deselect(self, x, y, r, cols):
-        for j in reversed(y[r]):
-            x[j] = cols.pop()
-            for i in x[j]:
-                for k in y[i]:
-                    if k != j:
-                        x[k].add(i)
-
-    def sudoku_place(self, val):
-        row, col = self.selected
-        self.cubes[row][col].set(val)
-        self.update_model()
-
+    #MAY STILL NEED THIS
     def sudoku_clear(self, row, col):
         # if self.cubes[row][col].value == 0:
         self.cubes[row][col].set_temp(0)
@@ -310,7 +208,6 @@ class Cube:
         self.selected = False
 
     def draw(self, win, samurai):
-
         fnt = pygame.font.SysFont("comics", 30)
         if not samurai:
             gap = self.width / 9
@@ -387,9 +284,6 @@ def redraw_window(win, board, time, strikes, samurai):
     win.blit(text, (200, 600 + 150))
 
     # Draw grid and board
-
-    # board.draw(win)
-
     board.draw(win, samurai)
 
 
@@ -480,20 +374,20 @@ def main():
                 elif 120 <= pos[0] <= 495 and 600 <= pos[1] <= 630:
                     samurai = False
                     board.reset(samurai)
-                    list(board.dlx_solve_sudoku((3, 3), board.board, win))
+                    #DLX here!!!
                 elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:
                     pygame.quit()
                 elif 50 <= pos[0] <= 150 and 700 <= pos[1] <= 730:
                     samurai = False
-                    board.set_puzzle(getPuzzle(1))
+                    board.set_puzzle(get_puzzle(1))
                     board.reset(samurai)
                 elif 200 <= pos[0] <= 300 and 700 <= pos[1] <= 730:
                     samurai = False
-                    board.set_puzzle(getPuzzle(2))
+                    board.set_puzzle(get_puzzle(2))
                     board.reset(samurai)
                 elif 350 <= pos[0] <= 450 and 700 <= pos[1] <= 730:
                     samurai = False
-                    board.set_puzzle(getPuzzle(3))
+                    board.set_puzzle(get_puzzle(3))
                     board.reset(samurai)
                 elif 200 <= pos[0] <= 300 and 750 <= pos[1] <= 780:
                     samurai = True
