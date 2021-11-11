@@ -1,5 +1,4 @@
 # GUI.py - RUN THIS FILE
-from SudokuSolver import *
 import puzzle_retriever  # our file
 from puzzle_retriever import get_puzzle
 import dlx  # our file
@@ -79,7 +78,7 @@ class Grid:
         row, col = self.selected
         self.cubes[row][col].set_temp(val)
 
-    def draw(self, win, samurai):
+    def draw(self, win, samurai, color):
         if not samurai:
             # Draw Grid Lines
             gap = self.width / 9
@@ -94,7 +93,7 @@ class Grid:
             # Draw Cubes
             for i in range(self.rows):
                 for j in range(self.cols):
-                    self.cubes[i][j].draw(win, samurai)
+                    self.cubes[i][j].draw(win, samurai, color)
 
             # Draw Grid Lines
         else:
@@ -143,7 +142,7 @@ class Grid:
             # Draw Cubes
             for i in range(self.rows):
                 for j in range(self.cols):
-                    self.cubes[i][j].draw(win, samurai)
+                    self.cubes[i][j].draw(win, samurai, color)
 
     def select(self, row, col):
         # Reset all other
@@ -192,6 +191,48 @@ class Grid:
     def sudoku_clear(self, row, col):
         # if self.cubes[row][col].value == 0:
         self.cubes[row][col].set_temp(0)
+
+    def dlx_place(self, val):
+        row, col = self.selected
+        self.cubes[row][col].set(val)
+        self.update_model()
+    
+    def dlx_sketch(self, r, c, n, win, color=None):
+        self.select(r, c)
+        self.cubes[r][c].temp = n    
+        self.dlx_place(self.cubes[r][c].temp)
+        self.sketch(n)
+        redraw_window(win, self, 0, 0, False, color) 
+        pygame.display.update() 
+        time.sleep(0.08)  
+
+    def dlx_show(self, dlx, win):  
+        allMoves = dlx.all_covers_uncovers
+        covered = dlx.cover_or_uncover
+        print('num moves:', int(len(allMoves) / 2)) 
+        print('num covers/uncovers:', len(dlx.all_covers_uncovers))
+        for move in range(len(allMoves)):
+            row = allMoves[move].rowID
+            first = dlx.constraint_matrix[row-1].index(1)
+            second = dlx.constraint_matrix[row-1].index(1, 81)  # find:1  start_at:81 
+            row = int(first / 9) 
+            col = first % 9 
+            num = int((second - 80) % 9)
+            # w/out this if, c0 would have a 9 but c1-c8 would have 0's instead of 9's
+            if num == 0:
+                num = 9
+            
+            # we don't want to sketch over the starting clues
+            if self.board[row][col] != 0: 
+                continue
+            elif covered[move]:
+                self.dlx_sketch(row, col, num, win, (66, 173, 245)) 
+            elif move: 
+                # dlx_show -> dlx_sketch -> redraw_window -> board.draw -> cubes.draw 
+                self.dlx_sketch(row, col, 0, win, (245, 66, 173))  # (r, g, b)
+            
+            if self.is_finished():
+                return 
 # End Of Grid Class
 
 class Cube:
@@ -207,7 +248,7 @@ class Cube:
         self.height = height
         self.selected = False
 
-    def draw(self, win, samurai):
+    def draw(self, win, samurai, color=None): 
         fnt = pygame.font.SysFont("comics", 30)
         if not samurai:
             gap = self.width / 9
@@ -224,12 +265,13 @@ class Cube:
             text = fnt.render(str(self.value), True, (0, 0, 0))
             win.blit(text, (x + (gap / 2 - text.get_width() / 2), y + (gap / 2 - text.get_height() / 2)))
 
+        # Draw lines when selecting a box
         if self.selected and samurai == False:
-            pygame.draw.rect(win, (0, 255, 0), (0, y, gap + self.width, gap), 3)
-            pygame.draw.rect(win, (0, 255, 0), (x, 0, gap, self.height), 3)
+            pygame.draw.rect(win, color, (0, y, gap + self.width, gap), 3)
+            pygame.draw.rect(win, color, (x, 0, gap, self.height), 3)
         if self.selected and samurai == True:
-            pygame.draw.rect(win, (0, 255, 0), (0, y, gap + self.width - 140, gap), 3)
-            pygame.draw.rect(win, (0, 255, 0), (x, 0, gap, self.height - 120), 3)
+            pygame.draw.rect(win, color, (0, y, gap + self.width - 140, gap), 3)
+            pygame.draw.rect(win, color, (x, 0, gap, self.height - 120), 3)
 
     def set(self, val):
         self.value = val
@@ -240,7 +282,7 @@ class Cube:
 
 # End Of Grid Class
 
-def redraw_window(win, board, time, strikes, samurai):
+def redraw_window(win, board, time, strikes, samurai, color=None):
     win.fill((255, 255, 255))
     # Draw time
     fnt = pygame.font.SysFont("comics", 20)
@@ -250,7 +292,7 @@ def redraw_window(win, board, time, strikes, samurai):
     text = fnt.render(str(strikes), True, (255, 0, 0))
     win.blit(text, (20, 750))
 
-    # code for buttons
+    # Code for buttons
     button_top = 550
     button_height = 30
     pygame.draw.rect(win, (216, 191, 216),
@@ -284,7 +326,7 @@ def redraw_window(win, board, time, strikes, samurai):
     win.blit(text, (200, 600 + 150))
 
     # Draw grid and board
-    board.draw(win, samurai)
+    board.draw(win, samurai, color)
 
 
 def format_time(secs):
@@ -296,7 +338,7 @@ def format_time(secs):
     return mat
 
 
-def main():
+def main(): 
     win = pygame.display.set_mode((540, 800))  # (x, y)
     pygame.display.set_caption("Sudoku")
     board = Grid(9, 9, 540, 540)
@@ -354,8 +396,7 @@ def main():
                         key = None
 
                         if board.is_finished():
-                            print("Game over")
-                        # run = False
+                            print("Game over") 
 
             if board.selected and key != None:
                 board.sketch(key)
@@ -363,38 +404,48 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()  # (x, y) of mouse position
                 clicked = board.click(pos, samurai)
+                # clicked a position on the board
                 if clicked:
                     board.select(clicked[0], clicked[1])
                     key = None
+                # new puzzle button (with default difficulty)
                 elif 120 <= pos[0] <= 495 and 550 <= pos[1] <= 580:
                     samurai = False
                     board.new_puzzle(2)
                     board.reset(samurai)
                     strikes = 0
+                # dancing links button clicked
                 elif 120 <= pos[0] <= 495 and 600 <= pos[1] <= 630:
                     samurai = False
-                    board.reset(samurai)
-                    #DLX here!!!
+                    board.reset(samurai) 
+                    dancing_links = dlx.DLX(board.board)
+                    dancing_links.create_linked_matrix()
+                    dancing_links.search(0)
+                    board.dlx_show(dancing_links, win)
+                # quit button hit
                 elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:
                     pygame.quit()
+                # generate an easy puzzle
                 elif 50 <= pos[0] <= 150 and 700 <= pos[1] <= 730:
                     samurai = False
                     board.set_puzzle(get_puzzle(1))
                     board.reset(samurai)
+                # generate a medium puzzle
                 elif 200 <= pos[0] <= 300 and 700 <= pos[1] <= 730:
                     samurai = False
                     board.set_puzzle(get_puzzle(2))
                     board.reset(samurai)
+                # generate a hard puzzle
                 elif 350 <= pos[0] <= 450 and 700 <= pos[1] <= 730:
                     samurai = False
                     board.set_puzzle(get_puzzle(3))
                     board.reset(samurai)
+                # generate a samurai puzzle
                 elif 200 <= pos[0] <= 300 and 750 <= pos[1] <= 780:
                     samurai = True
                     board.reset(samurai)
 
-        redraw_window(win, board, play_time, strikes, samurai)
-
+        redraw_window(win, board, play_time, strikes, samurai, (66, 173, 245))
         pygame.display.update()
 
 
