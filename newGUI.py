@@ -20,7 +20,6 @@
 import pygame
 import puzzle_retriever
 import dlx
-#import numpy as np  # added by me
 from itertools import product  # needed for dlx implementation
 from solver import solve, valid
 import time
@@ -28,7 +27,7 @@ pygame.font.init()
 
 
 class Grid:
-    start_puzzle = puzzle_retriever.get_puzzle()
+    #start_puzzle = puzzle_retriever.get_puzzle()
     hardest_puzzle = [[0, 0, 5, 3, 0, 0, 0, 0, 0],
                       [8, 0, 0, 0, 0, 0, 0, 2, 0],
                       [0, 7, 0, 0, 1, 0, 5, 0, 0],
@@ -38,7 +37,7 @@ class Grid:
                       [0, 6, 0, 5, 0, 0, 0, 0, 9],
                       [0, 0, 4, 0, 0, 0, 0, 3, 0],
                       [0, 0, 0, 0, 0, 9, 7, 0, 0]]
-    board = start_puzzle
+    board = hardest_puzzle
 
     def __init__(self, rows, cols, width, height):
         self.rows = rows
@@ -53,7 +52,7 @@ class Grid:
     New method. Used to reset the board when three mistakes are made or when dlx button is clicked.
     '''
     def reset(self):
-        self.board = self.start_puzzle
+        self.board = self.hardest_puzzle
         self.__init__(9, 9, 540, 540)
 
     def update_model(self):
@@ -128,20 +127,42 @@ class Grid:
                 #if not valid(self.model, self.cubes[i][j].value, (i, j)):  # throws error
                 #    return False
         return True
+
+    def dlx_place(self, val):
+        row, col = self.selected
+        self.cubes[row][col].set(val)
+        self.update_model()
     
-    ''' Most likely still need this
-    def dlx_sketch(self, r, win):
-        row = r[0]
-        col = r[1]
-        self.select(row, col)
-        self.cubes[row][col].temp = r[2]   
-        if (self.cubes[row][col].temp != 0):
-            self.dlx_place(self.cubes[row][col].temp)
-        self.sketch(r[2])
+    def dlx_sketch(self, r, c, n, win):
+        self.select(r, c)
+        self.cubes[r][c].temp = n   
+        if (self.cubes[r][c].temp != 0):
+            self.dlx_place(self.cubes[r][c].temp)
+        self.sketch(n)
         redraw_window(win, self, 0, 0) 
         pygame.display.update() 
-        time.sleep(0.05) 
-    '''
+        time.sleep(0.05)  
+
+    def dlx_show(self, dlx, win): 
+        solutions = dlx.final_solutions
+        moves = dlx.moves
+        mistakes = []
+        print('solutiosn:', len(solutions))
+        print('num moves:', len(moves))
+        print('mistakes:', len(mistakes))
+        for move in moves:
+            row = move.rowID
+            first = dlx.constraint_matrix[row-1].index(1)
+            second = dlx.constraint_matrix[row-1].index(1, 81)  # find:1  start_at:81 
+            row = int(first / 9) 
+            col = first % 9 
+            num = int((second - 80) % 9)
+            # w/out this if, c0 would have a 9 but c1-c8 would have 0's instead of 9's
+            if num == 0:
+                num = 9
+            self.dlx_sketch(row, col, num, win) 
+        return
+
 ### End Of Grid Class
 
 class Cube:
@@ -283,10 +304,12 @@ def main():
                 elif 120 <= pos[0] <= 495 and 650 <= pos[1] <= 680:  # if dlx button clicked
                     print("DLX Button Clicked!!!") 
                     board.reset()  
-                    #list(board.dlx_solve_sudoku((3, 3), board.board, win))
+                    #list(board.dlx_solve_sudoku((3, 3), board.board, win))  
                     dancing_links = dlx.DLX(board.board)
-                    dancing_links.createLinkedMatrix()
+                    dancing_links.create_linked_matrix()
                     dancing_links.search(0)
+                    board.dlx_show(dancing_links, win)
+                    
 
         if board.selected and key != None:
             board.sketch(key)
