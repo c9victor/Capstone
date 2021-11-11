@@ -10,8 +10,7 @@
 
 import pygame
 import puzzle_retriever
-import dlx
-from itertools import product  # needed for dlx implementation
+import dlx 
 from solver import solve, valid
 import time
 pygame.font.init()
@@ -126,35 +125,18 @@ class Grid:
     
     def dlx_sketch(self, r, c, n, win):
         self.select(r, c)
-        self.cubes[r][c].temp = n   
-        # if (self.cubes[r][c].temp != 0):
-        #     self.dlx_place(self.cubes[r][c].temp)
+        self.cubes[r][c].temp = n    
         self.dlx_place(self.cubes[r][c].temp)
         self.sketch(n)
         redraw_window(win, self, 0, 0) 
         pygame.display.update() 
-        #time.sleep(0.05) 
-        time.sleep(0.1)  
+        time.sleep(0.05)  
 
-        #  row = i[0]
-        # col = i[1]
-        # self.select(row, col)
-        # if self.cubes[row][col].temp == 0:
-        #     continue
-        # self.cubes[row][col].temp = 0   
-        # self.dlx_place(self.cubes[row][col].temp)
-        # self.sketch(0)
-        # redraw_window(win, self, 0, 0) 
-        # pygame.display.update() 
-
-    def dlx_show(self, dlx, win): 
-        solutions = dlx.final_solutions 
+    def dlx_show(self, dlx, win):  
         allMoves = dlx.all_covers_uncovers
         covered = dlx.cover_or_uncover
-        print('solutions:', len(solutions))
         print('num moves:', int(len(allMoves) / 2)) 
         print('num covers/uncovers:', len(dlx.all_covers_uncovers))
-        # for move in moves:
         for move in range(len(allMoves)):
             row = allMoves[move].rowID
             first = dlx.constraint_matrix[row-1].index(1)
@@ -176,8 +158,7 @@ class Grid:
                 self.dlx_sketch(row, col, 0, win) 
             
             if self.is_finished():
-                return
-        # return
+                return 
 
 ### End Of Grid Class
 
