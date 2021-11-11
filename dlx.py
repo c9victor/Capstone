@@ -1,4 +1,4 @@
-import puzzle_retriever
+# import puzzle_retriever  # for testing purposes
 
 class Node:
     def __init__(self, num=0): 
@@ -12,7 +12,7 @@ class Node:
         self.column = None
 
 class DLX:
-    def __init__(self):
+    def __init__(self, board=None):
         '''
         need to build a constraint matrix:
         324 columns (4 constraints * 81 positions)
@@ -22,7 +22,8 @@ class DLX:
         it will have 81 rows in the DLX solution, each
         filling in 4 of the 324 columns.
         '''
-        self.board = puzzle_retriever.get_puzzle() 
+        # self.board = puzzle_retriever.get_puzzle()  # for testing purposes
+        self.board = board
         self.head = Node()
         self.numProbRows = 729
         self.numProbCols = 324
@@ -30,6 +31,8 @@ class DLX:
         self.problem_matrix = [[False for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # need 1 extra for header
         self.constraint_matrix = self.build_constraint_matrix(self.board)  # constraint matrix of 1's and 0's is used to build problem matrix
         self.solutions = []
+        self.moves = []
+        self.final_solutions = []
 
         '''
         Initialize the problem matrix based on the given input
@@ -82,22 +85,21 @@ class DLX:
             grab number out of 2nd constraint
         '''
         for solution in self.solutions: 
-            row = solution.rowID
-            first = self.constraint_matrix[row-1].index(1)
-            second = self.constraint_matrix[row-1].index(1, 81)  # find:1  start_at:81 
-            row = int(first / 9) 
-            col = first % 9 
-            num = int((second - 80) % 9)
-            # w/out this if, c0 would have a 9 but c1-c8 would have 0's instead of 9's
-            if num == 0:
-                num = 9
-            self.board[row][col] = num 
-        print("solution:")
-        for i in range(len(self.board)):
-            print(self.board[i])
-        # if self.board == self.given_solution:
-        #     print('correct!')
-        return 0
+            self.final_solutions.append(solution)
+        #     row = solution.rowID
+        #     first = self.constraint_matrix[row-1].index(1)
+        #     second = self.constraint_matrix[row-1].index(1, 81)  # find:1  start_at:81 
+        #     row = int(first / 9) 
+        #     col = first % 9 
+        #     num = int((second - 80) % 9)
+        #     # w/out this if, c0 would have a 9 but c1-c8 would have 0's instead of 9's
+        #     if num == 0:
+        #         num = 9
+        #     self.board[row][col] = num 
+        # print("solution:")
+        # for i in range(len(self.board)):
+        #     print(self.board[i])
+        return
 
     '''
     Prints the problem matrix. Useful for debugging
@@ -192,6 +194,7 @@ class DLX:
 
         # move down the column and remove each row by traversing right
         row = colNode.down
+        # self.place(row)  # EXPERIMENTAL
         while row != colNode:
             rightNode = row.right 
             while rightNode != row:
@@ -260,17 +263,19 @@ class DLX:
         if(self.head.right == self.head):
             #self.print_solutions()
             self.map_solved_to_board()
-            return 
+            return
+
         # deterministically choose the smallest col
         column = self.get_min_column() 
+
         # cover chosen col 
         self.cover(column)
         
         rowNode = column.down 
         
-        # gets stuck because rowNode == column
         while rowNode != column: 
-            self.solutions.append(rowNode) # push()
+            self.solutions.append(rowNode)  # push()
+            self.moves.append(rowNode)  # EXPERIMENTAL
             
             rightNode = rowNode.right
             while rightNode != rowNode:
@@ -294,6 +299,8 @@ class DLX:
         self.uncover(column)
 
 
-dlx = DLX()  
-dlx.create_linked_matrix() 
-dlx.search(0) 
+# dlx = DLX()  
+# dlx.create_linked_matrix() 
+# dlx.search(0) 
+# print(len(dlx.final_solutions))
+# print(len(dlx.moves))
