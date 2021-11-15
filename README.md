@@ -14,23 +14,23 @@ This file retrieves a puzzle of the given difficulty from the csv file. Default 
 ## dlx.py
 This file contains our python implementation of the dancing links algorithm. We keep track of a two-dimensional array of nodes, where every row and column of the array is a circular doubly-linked list. Below is a description of critical methods.
 
-### build_constraint_matrix
+#### build_constraint_matrix
 Used to build the matrix of 1's and 0's which we can use to solve the exact cover problem. We must take into consideration that for a normal 9x9 sudoku puzzle, every position on the board has 4 constraints-
 1. row column constraint: every row/column position on the board must have one of the numbers 1-9 populating it.
 2. row number constraint: every row must have one and only one of the numbers 1-9.
 3. column number constraint: every column must have one and only one of the numbers 1-9.
 4. box number constraint: every box must have one and only one of the numbers 1-9.
 
-### create_linked_matrix
+#### create_linked_matrix
 The create_linked_matrix function is responsible for creating the linked 2d matrix where every row and column is a circular doubly-linked list. 
 
-### search
+#### search
 Finds every possible solution of the exact cover problem by covering and uncovering nodes to solve the exact cover problem. Note that a proper sudoku puzzle has only *one* solution.
 
-### cover
+#### cover
 Covers the column and every row associated with the column.
 
-### uncover
+#### uncover
 Reverts the cover operation in the exact opposite order that it happened in.
 
 ## samuraiGUI.py
