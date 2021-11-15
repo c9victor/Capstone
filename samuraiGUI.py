@@ -209,8 +209,10 @@ class Grid:
     def dlx_show(self, dlx, win):  
         allMoves = dlx.all_covers_uncovers
         covered = dlx.cover_or_uncover
-        print('num moves:', int(len(allMoves) / 2)) 
-        print('num covers/uncovers:', len(dlx.all_covers_uncovers))
+        numMoves = int(len(allMoves) / 2)
+        numMistakes = numMoves - 81
+        print('num moves:', numMoves)  # divided by 2 because every cover gets uncovered
+        print('num mistakes:', numMistakes)
         for move in range(len(allMoves)):
             row = allMoves[move].rowID
             first = dlx.constraint_matrix[row-1].index(1)
@@ -226,10 +228,11 @@ class Grid:
             if self.board[row][col] != 0: 
                 continue
             elif covered[move]:
-                self.dlx_sketch(row, col, num, win, (66, 173, 245)) 
+                self.dlx_sketch(row, col, num, win, (66, 173, 245))  # (r, g, b)
             elif move: 
                 # dlx_show -> dlx_sketch -> redraw_window -> board.draw -> cubes.draw 
                 self.dlx_sketch(row, col, 0, win, (245, 66, 173))  # (r, g, b)
+                # increment mistakes count
             
             if self.is_finished():
                 return 
