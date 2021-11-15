@@ -32,8 +32,8 @@ class DLX:
         self.constraint_matrix = self.build_constraint_matrix(self.board)  # constraint matrix of 1's and 0's is used to build problem matrix
         self.solutions = [] 
         self.final_solutions = [] 
-        self.all_covers_uncovers = []
-        self.cover_or_uncover = []
+        self.all_covers_uncovers = []  # list of all nodes that were covered/uncovered in order
+        self.cover_or_uncover = []  # corresponds to above list. 1 = covered, 0 = uncovered
 
         '''
         Initialize the problem matrix based on the given input
@@ -62,10 +62,8 @@ class DLX:
                     For squares that are already filled, you generate the one row that describes that assignment.
                     Else, generate the possibility that it is each number, one thru 9
 
-                    if board[r][c] != 0 and board[r][c] == num:
-                        generate row
-                    elif board[r][c] == 0:
-                        generate every possibility 
+                    if spquare is filled -> generate row with given number
+                    else if square is empty -> generate every possibility for row
                     '''
                     if (board[r][c] != 0 and board[r][c] == num) or board[r][c] == 0: 
                         rc_constraint[r*9 + c] = 1 
