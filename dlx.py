@@ -12,7 +12,7 @@ class Node:
         self.column = None
 
 class DLX:
-    def __init__(self, board=None):
+    def __init__(self, board=None, samurai=False):
         '''
         need to build a constraint matrix:
         324 columns (4 constraints * 81 positions)
@@ -25,11 +25,20 @@ class DLX:
         # self.board = puzzle_retriever.get_puzzle()  # for testing purposes
         self.board = board
         self.head = Node()
-        self.numProbRows = 729
-        self.numProbCols = 324
+        if samurai:
+            self.numProbRows = 3969
+            self.numProbCols = 8820
+            self.numPositions = 441
+        else:
+            self.numProbRows = 729
+            self.numProbCols = 324
+            self.numPositions = 81
+        print('starting initialization process')
         self.matrix = [[Node() for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # matrix of LL's used by the DLX algo
+        print('made matrix')
         self.problem_matrix = [[False for x in range(self.numProbCols)] for y in range(self.numProbRows + 1)]  # need 1 extra for header
-        self.constraint_matrix = self.build_constraint_matrix(self.board)  # constraint matrix of 1's and 0's is used to build problem matrix
+        print('made problem matrix')
+        self.constraint_matrix = self.build_constraint_matrix(self.board, samurai)  # constraint matrix of 1's and 0's is used to build problem matrix
         self.solutions = [] 
         self.final_solutions = [] 
         self.all_covers_uncovers = []  # list of all nodes that were covered/uncovered in order
@@ -46,33 +55,103 @@ class DLX:
                 elif self.constraint_matrix[i-1][j] == 1:
                     self.problem_matrix[i][j] = True
     
-    def build_constraint_matrix(self, board):
+    def build_constraint_matrix(self, board, samurai):
         constraint_matrix = [[0] * self.numProbCols] * self.numProbRows
-        numPositions = 81
+        print('initialized constraint matrix')
+        # numPositions = 81
         num_iters = 0
         for r in range(len(board)):
             for c in range(len(board[0])):        
                 for num in range(1, 10):  # iterates through 1-9
-                    # want to reset the constraints for every 81 positions on the board every iteration
-                    rc_constraint = [0] * numPositions  # row col constraint
-                    rn_constraint = [0] * numPositions  # row number constraint
-                    cn_constraint = [0] * numPositions  # col number constraint
-                    bn_constraint = [0] * numPositions  # box number constraint
-                    '''
-                    For squares that are already filled, you generate the one row that describes that assignment.
-                    Else, generate the possibility that it is each number, one thru 9
+                    if samurai:
+                        tl_rc_constraint = [0] * self.numPositions  # top left row col constraint
+                        tl_rn_constraint = [0] * self.numPositions  # top left row number constraint
+                        tl_cn_constraint = [0] * self.numPositions  # top left col number constraint
+                        tl_bn_constraint = [0] * self.numPositions  # top left box number constraint
 
-                    if spquare is filled -> generate row with given number
-                    else if square is empty -> generate every possibility for row
-                    '''
-                    if (board[r][c] != 0 and board[r][c] == num) or board[r][c] == 0: 
-                        rc_constraint[r*9 + c] = 1 
-                        rn_constraint[c*9 + num - 1] = 1
-                        cn_constraint[r*9 + num - 1] = 1
-                        # // represents floor division
-                        bn_constraint[((r // 3) * 3 + (c // 3)) * 9 + num - 1] = 1  # b * 9 + (num - 1) 
-                        # concatenate constraints together
-                        constraint_matrix[num_iters] = rc_constraint + rn_constraint + cn_constraint + bn_constraint  
+                        tr_rc_constraint = [0] * self.numPositions  # top right row col constraint
+                        tr_rn_constraint = [0] * self.numPositions  # top right row number constraint
+                        tr_cn_constraint = [0] * self.numPositions  # top right col number constraint
+                        tr_bn_constraint = [0] * self.numPositions  # top right box number constraint
+
+                        bl_rc_constraint = [0] * self.numPositions  # bottom left row col constraint
+                        bl_rn_constraint = [0] * self.numPositions  # bottom left row number constraint
+                        bl_cn_constraint = [0] * self.numPositions  # bottom left col number constraint
+                        bl_bn_constraint = [0] * self.numPositions  # bottom left box number constraint
+
+                        br_rc_constraint = [0] * self.numPositions  # bottom right row col constraint
+                        br_rn_constraint = [0] * self.numPositions  # bottom right row number constraint
+                        br_cn_constraint = [0] * self.numPositions  # bottom right col number constraint
+                        br_bn_constraint = [0] * self.numPositions  # bottom right box number constraint
+
+                        c_rc_constraint = [0] * self.numPositions  # center row col constraint
+                        c_rn_constraint = [0] * self.numPositions  # center row number constraint
+                        c_cn_constraint = [0] * self.numPositions  # center col number constraint
+                        c_bn_constraint = [0] * self.numPositions  # center box number constraint
+                        if (board[r][c] != 0 and board[r][c] == num) or board[r][c] == 0: 
+                            # horizontal spaces that are not actually part of the board
+                            if 9 <= r <= 11 and (0 <= c <= 5 or 15 <= c <= 20):
+                                continue
+                            # vertical spaces that are not actually part of the board
+                            elif 9 <= c <= 11 and (0 <= r <= 5 or 15 <= r <= 20):
+                                continue
+                            # top left puzzle positions
+                            if r <= 8 and c <= 8:
+                                tl_rc_constraint[r*9 + c] = 1 
+                                tl_rn_constraint[c*9 + num - 1] = 1
+                                tl_cn_constraint[r*9 + num - 1] = 1
+                                tl_bn_constraint[((r // 3) * 3 + (c // 3)) * 9 + num - 1] = 1  # b * 9 + (num - 1) 
+                            # top right puzzle positions --> NOT DONE YET
+                            if r <= 8 and c >= 12:
+                                tr_rc_constraint[r*21 + c] = 1
+                                tr_rn_constraint[c*21 + num - 1] = 1
+                                tr_cn_constraint[r*9 + num - 1] = 1
+                                tr_bn_constraint[0] = 1
+                            # bottom left puzzle positions --> NOT DONE YET
+                            if r >= 12 and c <= 8:
+                                bl_rc_constraint[0] = 1
+                                bl_rn_constraint[0] = 1
+                                bl_cn_constraint[0] = 1
+                                bl_bn_constraint[0] = 1
+                            # bottom right puzzle positions --> NOT DONE YET
+                            if r >= 12 and c >= 12:
+                                br_rc_constraint[0] = 1
+                                br_rn_constraint[0] = 1
+                                br_cn_constraint[0] = 1
+                                br_bn_constraint[0] = 1
+                            # center puzzle positions --> NOT DONE YET
+                            if 6 <= r <= 14 and 6 <= c <= 14:
+                                c_rc_constraint[0] = 1
+                                c_rn_constraint[0] = 1
+                                c_cn_constraint[0] = 1
+                                c_bn_constraint[0] = 1
+                            
+                            constraint_matrix[num_iters] = tl_rc_constraint + tl_rn_constraint + tl_cn_constraint + tl_bn_constraint
+                            + tr_rc_constraint + tr_rn_constraint + tr_cn_constraint + tr_bn_constraint
+                            + bl_rc_constraint + bl_rn_constraint + bl_cn_constraint + bl_bn_constraint
+                            + br_rc_constraint + br_rn_constraint + br_cn_constraint + br_bn_constraint
+                            + c_rc_constraint + c_rn_constraint + c_cn_constraint + c_bn_constraint
+                    else:
+                        # want to reset the constraints for every 81 positions on the board every iteration
+                        rc_constraint = [0] * self.numPositions  # row col constraint
+                        rn_constraint = [0] * self.numPositions  # row number constraint
+                        cn_constraint = [0] * self.numPositions  # col number constraint
+                        bn_constraint = [0] * self.numPositions  # box number constraint
+                        '''
+                        For squares that are already filled, you generate the one row that describes that assignment.
+                        Else, generate the possibility that it is each number, one thru 9
+
+                        if spquare is filled -> generate row with given number
+                        else if square is empty -> generate every possibility for row
+                        '''
+                        if (board[r][c] != 0 and board[r][c] == num) or board[r][c] == 0: 
+                            rc_constraint[r*9 + c] = 1 
+                            rn_constraint[c*9 + num - 1] = 1
+                            cn_constraint[r*9 + num - 1] = 1
+                            # // represents floor division
+                            bn_constraint[((r // 3) * 3 + (c // 3)) * 9 + num - 1] = 1  # b * 9 + (num - 1) 
+                            # concatenate constraints together
+                            constraint_matrix[num_iters] = rc_constraint + rn_constraint + cn_constraint + bn_constraint  
                     num_iters += 1
         
         return constraint_matrix
@@ -85,9 +164,9 @@ class DLX:
         '''
         for solution in self.solutions: 
             self.final_solutions.append(solution)
-            row = solution.rowID
-            first = self.constraint_matrix[row-1].index(1)
-            second = self.constraint_matrix[row-1].index(1, 81)  # find:1  start_at:81 
+            s_row = solution.rowID
+            first = self.constraint_matrix[s_row-1].index(1)
+            second = self.constraint_matrix[s_row-1].index(1, 81)  # find:1  start_at:81 
             row = int(first / 9) 
             col = first % 9 
             num = int((second - 80) % 9)
