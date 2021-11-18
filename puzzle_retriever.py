@@ -2,7 +2,6 @@ import random
 import linecache
 import numpy as np 
 
-
 '''
 Opens a csv file filled with sudoku puzzles.
 The columns of the file are:   x   puzzle   solution   clues   difficulty
@@ -11,14 +10,12 @@ If the puzzle is not of an acceptable difficulty level then a new one is retriev
 Note that the first line of the file contains headers; do not attempt to parse it as a puzzle
 '''
 def get_puzzle(diff=2):  
-    # puzzleNum = 1333506  # a very good and hard puzzle
+    #puzzleNum = 1333506  # a very good and hard puzzle
     puzzleNum = random.randint(1, 3000001)  
-    #print("Puzzle Number:", puzzleNum) 
     puzzle = linecache.getline("sudoku-3m.csv", puzzleNum)
     puzzle = puzzle.split(',')
     while (not check_diff(puzzle, diff)):
         puzzleNum = random.randint(1, 3000001) 
-        #print("Puzzle Number:", puzzleNum) 
         puzzle = linecache.getline("sudoku-3m.csv", puzzleNum)
         puzzle = puzzle.split(',')
     print("Puzzle Number:", puzzleNum) 
