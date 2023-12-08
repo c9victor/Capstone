@@ -8,6 +8,12 @@ Our Capstone project focuses on solving Sudoku puzzles using the Dancing Link al
 - Algorithm X: an algorithm that finds all solutions to the exact cover problem. Popular exact cover problems include Pentomino tiling, n queens, and ***sudoku***.
 - Dancing Link algorithm: an algorithm that allows one to efficiently revert the deletion of a node from a circular doubly-linked list. This makes it a very effective way of implementing backtracking algorithms. It is used to implement Donald Knuth's Algorithm X.
 
+
+
+https://github.com/c9victor/Capstone/assets/56898542/0d98dc1d-6805-408f-90bf-89ef4ff9383a
+
+
+
 ## puzzle_retriever.py
 This file retrieves a puzzle of the given difficulty from the csv file. Default difficulty is 2, or medium.
 
